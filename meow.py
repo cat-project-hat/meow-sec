@@ -97,9 +97,9 @@ def boot():
     console.print()
 
     BOOT_MSGS = [
-        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 45 modules active"),
+        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 46 modules active"),
         (f"[{OR}]WARN[/]", "authorized targets only"),
-        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 45 modules active"),
+        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 46 modules active"),
     ]
     for tag, msg in BOOT_MSGS:
         time.sleep(0.08)
@@ -281,6 +281,9 @@ def dispatch(choice: str):
 
     elif choice in ("45", "shodan"):
         from modules import shodan_lite; shodan_lite.run()
+
+    elif choice in ("46", "track", "ipgrab"):
+        from modules import track; track.run()
 
     elif choice in ("0", "exit", "quit", "q"):
         return False

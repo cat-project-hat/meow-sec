@@ -121,6 +121,7 @@ def show_module_banner(module: str):
         "proto":      ("PROTO",      "Prototype Pollution Tester",     OR),
         "breach":     ("BREACH",     "Data Breach Checker",            CY),
         "shodan":     ("SHODAN",     "Shodan-Lite IP Recon (no key)",  G1),
+        "track":      ("TRACK",      "Chameleon IP Grabber (WebP trap)", OR),
     }
     name, desc, color = names.get(module.lower(), (module.upper(), "", G1))
     console.print(Rule(f"[bold {color}] {name} [/][{DM}] {desc} ", style=G2))
@@ -180,6 +181,7 @@ _MENU_UTILS = [
     ("7",  "LOOT",    "results"),
     ("20", "REPORT",  "HTML report"),
     ("24", "PHISH",   "phish+tunnel"),
+    ("46", "TRACK",   "IP grabber"),
     ("0",  "EXIT",    "quit"),
 ]
 
@@ -235,7 +237,7 @@ def show_menu():
 
     console.print(Panel(
         t,
-        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  45 modules  ◈",
+        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  46 modules  ◈",
         border_style=G2,
         padding=(0, 1),
     ))

@@ -195,11 +195,22 @@ def _render_web(scans: list) -> str:
             continue
         target = s.get("target","?")
         headers = s.get("headers", {})
-        for hdr, data in headers.items():
-            if isinstance(data, dict):
-                sev = data.get("severity","INFO")
-                val = data.get("value","?")[:60]
+        if isinstance(headers, list):
+            # purr.py sauvegarde les headers en liste de dicts {name, value, severity}
+            for item in headers:
+                if not isinstance(item, dict): continue
+                hdr = item.get("name", item.get("header", "?"))
+                sev = item.get("severity", "INFO")
+                val = str(item.get("value", item.get("val", "?")))[:60]
                 rows += f"<tr><td>{target}</td><td>{hdr}</td><td class='{sev.lower()}'>{sev}</td><td>{val}</td></tr>"
+        elif isinstance(headers, dict):
+            for hdr, data in headers.items():
+                if isinstance(data, dict):
+                    sev = data.get("severity","INFO")
+                    val = data.get("value","?")[:60]
+                    rows += f"<tr><td>{target}</td><td>{hdr}</td><td class='{sev.lower()}'>{sev}</td><td>{val}</td></tr>"
+                else:
+                    rows += f"<tr><td>{target}</td><td>{hdr}</td><td class='info'>INFO</td><td>{str(data)[:60]}</td></tr>"
         paths = s.get("found_paths", [])
         for p in paths[:20]:
             url  = p.get("url","")[:80]

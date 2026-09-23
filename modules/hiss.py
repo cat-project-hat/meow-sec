@@ -328,7 +328,7 @@ SSRF_INDICATORS = ["root:", "metadata", "ami-id", "instance-id",
 def _test_ssrf(url: str, param: str) -> list:
     found = []
     for payload, desc in SSRF_PAYLOADS:
-        r = _inject(url, param, payload)
+        r = _inject_url(url, param, payload)
         if r:
             body = r.text
             for ind in SSRF_INDICATORS:
@@ -354,7 +354,7 @@ CRLF_PAYLOADS = [
 def _test_crlf(url: str, param: str) -> list:
     found = []
     for payload in CRLF_PAYLOADS:
-        r = _inject(url, param, payload)
+        r = _inject_url(url, param, payload)
         if r:
             hdrs_low = {k.lower(): v for k, v in r.headers.items()}
             if "x-injected" in hdrs_low or "meow" in str(r.headers).lower():

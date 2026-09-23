@@ -80,11 +80,11 @@ def _normalise(target: str) -> str:
 
 # ─── CHECKS ──────────────────────────────────────────────────
 
-def check_headers(base_url: str) -> list:
+def check_headers(base_url: str) -> tuple:
     """Analyse les en-têtes de sécurité"""
     r = _get(base_url)
     if not r["ok"]:
-        err(f"Request failed: {r.get('error', '')}"); return []
+        err(f"Request failed: {r.get('error', '')}"); return [], {}
 
     findings = []
     h = {k.lower(): v for k, v in r["headers"].items()}
@@ -205,15 +205,18 @@ def run(target: str = None):
     console.print(Rule(f"[{G1}] HEADERS ", style=G2))
     hdr_findings, first_resp = check_headers(target)
 
-    missing = [(h, v, s, d) for h, v, s, d in hdr_findings if v == "MISSING"]
-    if missing:
-        print_result_table("Missing Security Headers",
-            ["HEADER", "STATUS", "SEVERITY", "ISSUE"],
-            missing, color_col=2)
+    if not hdr_findings:
+        warn("Could not retrieve headers (timeout or connection error).")
+    else:
+        missing = [(h, v, s, d) for h, v, s, d in hdr_findings if v == "MISSING"]
+        if missing:
+            print_result_table("Missing Security Headers",
+                ["HEADER", "STATUS", "SEVERITY", "ISSUE"],
+                missing, color_col=2)
 
     # ── TECH STACK ──
     console.print(Rule(f"[{G1}] TECH STACK ", style=G2))
-    if first_resp["ok"]:
+    if first_resp.get("ok"):
         techs = detect_tech(first_resp["body"], first_resp["headers"])
         if techs:
             for t in techs:

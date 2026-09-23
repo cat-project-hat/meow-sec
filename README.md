@@ -10,11 +10,11 @@
 
 **By cat-project-hat // v1.1 // 2026**
 
-Toolkit de sécurité offensif Python 3 — interface TUI Rich — 34 modules — thème chat hacker
+Toolkit de sécurité offensif Python 3 — interface TUI Rich — 45 modules — thème chat hacker
 
 ![Python](https://img.shields.io/badge/Python-3.10+-green?style=flat-square&logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue?style=flat-square)
-![Modules](https://img.shields.io/badge/Modules-34-brightgreen?style=flat-square)
+![Modules](https://img.shields.io/badge/Modules-45-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-Educational-red?style=flat-square)
 ![Proxy](https://img.shields.io/badge/Proxy-Rotation-orange?style=flat-square)
 ![CF Bypass](https://img.shields.io/badge/Cloudflare-Bypass-yellow?style=flat-square)
@@ -77,7 +77,18 @@ meow-sec/
     ├── bucket.py        ← Cloud bucket finder (S3, GCS, Azure, DO)
     ├── spray.py         ← Password spraying (HTTP form, Basic, NTLM)
     ├── graphql.py       ← GraphQL security tester
-    └── twofa.py         ← 2FA bypass tester
+    ├── twofa.py         ← 2FA bypass tester
+    ├── smuggle.py       ← HTTP request smuggling tester (CL.TE / TE.CL / TE.TE)
+    ├── xxe.py           ← XML external entity injection tester (10 payloads)
+    ├── gitdump.py       ← Exposed git + sensitive file scanner (50+ paths)
+    ├── ssti.py          ← Server-side template injection tester
+    ├── secretscan.py    ← Secret / credential scanner in HTTP responses
+    ├── cache.py         ← Web cache poisoning & deception tester
+    ├── oauth.py         ← OAuth 2.0 / OIDC misconfiguration tester
+    ├── deseria.py       ← Deserialization vulnerability tester (PHP/Java/Pickle/Node)
+    ├── proto.py         ← Prototype pollution tester (Node.js)
+    ├── breach.py        ← Data breach checker (HIBP k-anonymity + LeakCheck)
+    └── shodan_lite.py   ← Shodan-Lite IP recon (internetdb.shodan.io, no key)
 ```
 
 ---
@@ -120,6 +131,82 @@ meow-sec/
 | 32 | **SPRAY** | Password spraying — HTTP form, Basic auth, NTLM (auth requise) |
 | 33 | **GRAPHQL** | GraphQL security tester — introspection, injection, mutations |
 | 34 | **2FA** | 2FA bypass tester — OTP brute, reuse, response manip, backup codes, skip |
+| 35 | **SMUGGLE** | HTTP request smuggling tester — CL.TE / TE.CL / TE.TE (raw sockets) |
+| 36 | **XXE** | XML External Entity injection tester — 10 payloads, OOB, SSRF, error-based |
+| 37 | **GITDUMP** | Exposed git repo + 50+ sensitive file scanner (keys, .env, backups) |
+| 38 | **SSTI** | Server-side template injection — 10 detection payloads, RCE hints |
+| 39 | **SECRETSCAN** | Secret/credential scanner in responses — AWS, GitHub, JWT, Stripe, 15 patterns |
+| 40 | **CACHE** | Web cache poisoning & deception tester — 10 unkeyed header tests |
+| 41 | **OAUTH** | OAuth 2.0 / OIDC misconfiguration — open redirect, state, PKCE, implicit flow |
+| 42 | **DESERIA** | Deserialization vulnerability tester — PHP / Java / Python pickle / Node.js |
+| 43 | **PROTO** | Prototype pollution tester — query, JSON, form, path injection vectors |
+| 44 | **BREACH** | Data breach checker — HIBP k-anonymity (FREE), email lookup, breach list |
+| 45 | **SHODAN** | Shodan-Lite IP recon — internetdb.shodan.io (no key), CIDR scan, crt.sh |
+
+---
+
+## 🔍 Détail des modules injection/exploit
+
+### Module 35 — SMUGGLE (HTTP Request Smuggling)
+Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis :
+- **CL.TE** : Content-Length inclut des octets après le 0-chunk TE — mesure le delta de temps
+- **TE.CL** : Transfer-Encoding chunked 1 octet, CL=3 — détecte 400/500 ou hang
+- **TE.TE** : 5 variantes d'obfuscation du header Transfer-Encoding
+
+### Module 36 — XXE (XML External Entity)
+10 payloads testés avec `application/xml` et `text/xml` :
+- Lecture de fichiers locaux (`/etc/passwd`, `win.ini`)
+- SSRF vers les métadonnées AWS (169.254.169.254) et localhost:22
+- Blind OOB avec callback URL configurable
+- Error-based, CDATA exfil, SVG XXE, PHP `expect://`, SOAP XXE
+
+### Module 37 — GITDUMP (Git & Sensitive File Scanner)
+- Phase 1 : 50+ chemins sensibles (`.git/`, `.env`, clés privées, backups, configs)
+- Phase 2 : si `.git/HEAD` trouvé → télécharge les internals git, parse les URLs de remote
+- Risque HIGH : fichiers git, `.env`, credentials, clés privées
+
+### Module 38 — SSTI (Template Injection)
+10 payloads de détection testés via GET, POST form, POST JSON, segment de path :
+- Détection d'engine par la valeur retournée (49, 7777777, A...)
+- Suggestions de payloads RCE pour Jinja2, Twig, FreeMarker, Mako
+
+### Module 39 — SECRETSCAN (Secret Scanner)
+15 patterns regex (AWS, GitHub, Google, JWT, clé privée, DB URL, Slack, Stripe...) :
+- Mode single URL ou crawl (profondeur 2, max 50 pages)
+- Tronque les valeurs trouvées à 40 chars pour éviter l'exposition
+
+### Module 40 — CACHE (Cache Poisoning)
+- 10 tests d'headers non-keyés (X-Forwarded-Host, X-Original-URL, Fat GET...)
+- Compare status + taille de réponse avec le baseline
+- Test cache deception : extensions statiques fake sur des chemins protégés
+
+### Module 41 — OAUTH (OAuth 2.0 Misconfiguration)
+- Découverte automatique (`.well-known/openid-configuration`)
+- 7 vérifications : open redirect_uri, state CSRF, implicit flow, PKCE, client secret en JS, token endpoint GET
+- Scan du source de la page pour `client_secret` / `clientSecret`
+
+### Module 42 — DESERIA (Deserialization)
+- **PHP** : payloads `O:8:"stdClass":0:{}`, détection via erreurs `__wakeup`/`__destruct`
+- **Java** : magic bytes `AC ED 00 05`, détection ClassNotFoundException
+- **Python pickle** : magic `\x80\x04`, détection erreurs unpickling
+- **Node.js** : `_$$ND_FUNC$$_` node-serialize RCE pattern
+
+### Module 43 — PROTO (Prototype Pollution)
+- Injection via query string (`__proto__[testprop]=marker`)
+- Injection via JSON body (`{"__proto__": {...}}`)
+- Injection via form POST et segment de chemin URL
+- Détection si le marker `meow_polluted_7749` apparaît dans la réponse
+
+### Module 44 — BREACH (Data Breach Checker)
+- **Mode 1** : check mot de passe par k-anonymité HIBP (SHA1, envoie seulement 5 chars, **GRATUIT**)
+- **Mode 2** : check email via HIBP v3 (clé API requise) + LeakCheck.io (free tier)
+- **Mode 3** : liste toutes les brèches connues, filtrable par domaine
+
+### Module 45 — SHODAN (Shodan-Lite)
+- Utilise `https://internetdb.shodan.io/{ip}` (API publique, sans clé)
+- Affiche : ports ouverts, CPEs, hostnames, tags (honeypot/VPN/CDN), CVE IDs
+- Scan CIDR /24 (256 IPs) en parallèle
+- Lookup de domaine + résolution DNS + crt.sh pour les sous-domaines via CT
 
 ---
 

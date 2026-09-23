@@ -7,10 +7,12 @@ By cat-project-hat // 2026
 For authorized penetration testing, CTF challenges and security research only.
 Unauthorized use is illegal. Use only on systems you own or have explicit written permission to test.
 
-34 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
+45 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
             PROXYCAT · PAWS · MEWHASH · CODEC · PAYLOAD · NETKIT · STRESS · LOOT
             REVSHELL · WAF · JWTCAT · REPORT · BRUTE · CMS · SSLSCAN · PHISH
             CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA
+            SMUGGLE · XXE · GITDUMP · SSTI · SECRETSCAN · CACHE · OAUTH · DESERIA · PROTO
+            BREACH · SHODAN
 """
 
 import sys
@@ -95,9 +97,9 @@ def boot():
     console.print()
 
     BOOT_MSGS = [
-        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 34 modules active"),
+        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 45 modules active"),
         (f"[{OR}]WARN[/]", "authorized targets only"),
-        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 34 modules active"),
+        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 45 modules active"),
     ]
     for tag, msg in BOOT_MSGS:
         time.sleep(0.08)
@@ -247,6 +249,39 @@ def dispatch(choice: str):
         from modules import twofa
         twofa.run()
 
+    elif choice in ("35", "smuggle"):
+        from modules import smuggle; smuggle.run()
+
+    elif choice in ("36", "xxe"):
+        from modules import xxe; xxe.run()
+
+    elif choice in ("37", "gitdump"):
+        from modules import gitdump; gitdump.run()
+
+    elif choice in ("38", "ssti"):
+        from modules import ssti; ssti.run()
+
+    elif choice in ("39", "secretscan", "secrets"):
+        from modules import secretscan; secretscan.run()
+
+    elif choice in ("40", "cache"):
+        from modules import cache; cache.run()
+
+    elif choice in ("41", "oauth"):
+        from modules import oauth; oauth.run()
+
+    elif choice in ("42", "deseria", "deserial"):
+        from modules import deseria; deseria.run()
+
+    elif choice in ("43", "proto"):
+        from modules import proto; proto.run()
+
+    elif choice in ("44", "breach"):
+        from modules import breach; breach.run()
+
+    elif choice in ("45", "shodan"):
+        from modules import shodan_lite; shodan_lite.run()
+
     elif choice in ("0", "exit", "quit", "q"):
         return False
 
@@ -310,8 +345,21 @@ def main():
             "bucket":   "31",
             "spray":    "32",
             "graphql":  "33",
-            "2fa":      "34",
-            "twofa":    "34",
+            "2fa":       "34",
+            "twofa":     "34",
+            "smuggle":   "35",
+            "xxe":       "36",
+            "gitdump":   "37",
+            "ssti":      "38",
+            "secretscan":"39",
+            "secrets":   "39",
+            "cache":     "40",
+            "oauth":     "41",
+            "deseria":   "42",
+            "deserial":  "42",
+            "proto":     "43",
+            "breach":    "44",
+            "shodan":    "45",
         }
         mod = args[0].lower()
         if mod in module_map:
@@ -383,6 +431,12 @@ def _print_help():
   harvest   Email harvester           takeover  Subdomain takeover
   bucket    Cloud bucket finder       spray     Password spraying
   graphql   GraphQL tester            2fa       2FA bypass
+  smuggle   HTTP smuggling            xxe       XXE inject
+  gitdump   Git exposure              ssti      Template inject
+  secretscan Secrets scanner          cache     Cache poisoning
+  oauth     OAuth misconfig           deseria   Deserialization
+  proto     Proto pollution           breach    Breach check
+  shodan    IP recon (no key)
 
 [{G1}]Proxy:[/]
   Run PROXYCAT first to download & validate proxies.

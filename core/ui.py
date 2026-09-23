@@ -108,8 +108,19 @@ def show_module_banner(module: str):
         "takeover": ("TAKEOVER", "Subdomain Takeover Checker",   OR),
         "bucket":   ("BUCKET",   "Cloud Bucket Finder",          CY),
         "spray":    ("SPRAY",    "Password Spraying",            RD),
-        "graphql":  ("GRAPHQL",  "GraphQL Security Tester",      CY),
-        "2fa":      ("2FA",      "2FA Bypass Tester",            OR),
+        "graphql":    ("GRAPHQL",    "GraphQL Security Tester",        CY),
+        "2fa":        ("2FA",        "2FA Bypass Tester",              OR),
+        "smuggle":    ("SMUGGLE",    "HTTP Request Smuggling",         OR),
+        "xxe":        ("XXE",        "XML External Entity Tester",     RD),
+        "gitdump":    ("GITDUMP",    "Git & Sensitive File Scanner",   G1),
+        "ssti":       ("SSTI",       "Template Injection Tester",      RD),
+        "secretscan": ("SECRETSCAN", "Secret / Credential Scanner",    OR),
+        "cache":      ("CACHE",      "Cache Poisoning Tester",         CY),
+        "oauth":      ("OAUTH",      "OAuth 2.0 Misconfiguration",     OR),
+        "deseria":    ("DESERIA",    "Deserialization Tester",         RD),
+        "proto":      ("PROTO",      "Prototype Pollution Tester",     OR),
+        "breach":     ("BREACH",     "Data Breach Checker",            CY),
+        "shodan":     ("SHODAN",     "Shodan-Lite IP Recon (no key)",  G1),
     }
     name, desc, color = names.get(module.lower(), (module.upper(), "", G1))
     console.print(Rule(f"[bold {color}] {name} [/][{DM}] {desc} ", style=G2))
@@ -118,32 +129,34 @@ def show_module_banner(module: str):
 
 # Format : (key, name, short_desc)
 _MENU_RECON = [
-    ("1",  "CLAW",     "ports"),
-    ("2",  "PURR",     "HTTP recon"),
-    ("3",  "SCRATCH",  "dir brute"),
-    ("4",  "WHISKER",  "DNS/WHOIS"),
-    ("5",  "HISS",     "SQLi/XSS+"),
-    ("6",  "CATNAP",   "subdomains"),
-    ("9",  "GHOST",    "usernames"),
-    ("10", "OSINT+",   "email/IP"),
-    ("18", "WAF",      "WAF detect"),
-    ("25", "CORS",     "CORS misconfig"),
-    ("26", "LFI",      "LFI/RFI"),
-    ("27", "FUZZ",     "param fuzz"),
-    ("28", "CVE",      "CVE lookup"),
-    ("29", "HARVEST",  "email harvest"),
-    ("30", "TAKEOVER", "subdomain tkover"),
+    ("1",  "CLAW",      "ports"),
+    ("2",  "PURR",      "HTTP recon"),
+    ("3",  "SCRATCH",   "dir brute"),
+    ("4",  "WHISKER",   "DNS/WHOIS"),
+    ("6",  "CATNAP",    "subdomains"),
+    ("9",  "GHOST",     "usernames"),
+    ("10", "OSINT+",    "email/IP"),
+    ("18", "WAF",       "WAF detect"),
+    ("28", "CVE",       "CVE lookup"),
+    ("29", "HARVEST",   "email harvest"),
+    ("30", "TAKEOVER",  "subdomain tkover"),
+    ("37", "GITDUMP",   "git exposure"),
+    ("39", "SECRETSCAN","secrets scan"),
+    ("44", "BREACH",    "breach check"),
+    ("45", "SHODAN",    "IP recon"),
 ]
-_MENU_TOOLS = [
-    ("11", "PAWS",    "passgen"),
-    ("12", "MEWHASH", "hash/crack"),
-    ("13", "CODEC",   "encode"),
-    ("14", "PAYLOAD", "payloads"),
-    ("17", "REVSHELL","rev shell"),
-    ("19", "JWTCAT",  "JWT atk"),
-    ("32", "SPRAY",   "pwd spray"),
-    ("33", "GRAPHQL", "GraphQL atk"),
-    ("34", "2FA",     "2FA bypass"),
+_MENU_EXPLOIT = [
+    ("5",  "HISS",    "SQLi/XSS+"),
+    ("25", "CORS",    "CORS misconfig"),
+    ("26", "LFI",     "LFI/RFI"),
+    ("27", "FUZZ",    "param fuzz"),
+    ("35", "SMUGGLE", "HTTP smuggling"),
+    ("36", "XXE",     "XXE inject"),
+    ("38", "SSTI",    "template inject"),
+    ("40", "CACHE",   "cache poison"),
+    ("41", "OAUTH",   "OAuth misconfig"),
+    ("42", "DESERIA", "deserializ"),
+    ("43", "PROTO",   "proto pollut"),
 ]
 _MENU_NET = [
     ("8",  "PROXYCAT","proxies"),
@@ -153,8 +166,17 @@ _MENU_NET = [
     ("22", "CMS",     "CMS detect"),
     ("23", "SSLSCAN", "SSL/TLS"),
     ("31", "BUCKET",  "cloud buckets"),
+    ("32", "SPRAY",   "pwd spray"),
+    ("33", "GRAPHQL", "GraphQL atk"),
+    ("34", "2FA",     "2FA bypass"),
 ]
 _MENU_UTILS = [
+    ("11", "PAWS",    "passgen"),
+    ("12", "MEWHASH", "hash/crack"),
+    ("13", "CODEC",   "encode"),
+    ("14", "PAYLOAD", "payloads"),
+    ("17", "REVSHELL","rev shell"),
+    ("19", "JWTCAT",  "JWT atk"),
     ("7",  "LOOT",    "results"),
     ("20", "REPORT",  "HTML report"),
     ("24", "PHISH",   "phish+tunnel"),
@@ -163,10 +185,10 @@ _MENU_UTILS = [
 
 # (col_color, ears, eyes, nose_mouth)
 _CAT_DEFS = [
-    (G1,  r"/\_/\ ", "( o.o )", " > w < "),   # RECON  — vert, yeux ouverts
-    (CY,  r"/\_/\ ", "( >.< )", " > ~ < "),   # TOOLS  — cyan, yeux plissés
-    (OR,  r"/\_/\ ", "( ^.^ )", " > v < "),   # NET    — orange, souriant
-    (RD,  r"/\_/\ ", "( o_o )", " > x < "),   # UTILS  — rouge, stoïque
+    (G1,  r"/\_/\ ", "( o.o )", " > w < "),   # RECON   — vert, yeux ouverts
+    (RD,  r"/\_/\ ", "( >.< )", " > ~ < "),   # EXPLOIT — rouge, yeux plissés
+    (OR,  r"/\_/\ ", "( ^.^ )", " > v < "),   # NET     — orange, souriant
+    (CY,  r"/\_/\ ", "( o_o )", " > x < "),   # UTILS   — cyan, stoïque
 ]
 
 def _fmt_row(key: str, name: str, desc: str, c_key=CY, c_name=None, c_desc=None) -> str:
@@ -177,8 +199,8 @@ def _fmt_row(key: str, name: str, desc: str, c_key=CY, c_name=None, c_desc=None)
             f"[{cd}]{desc}[/]")
 
 def show_menu():
-    cols   = [_MENU_RECON, _MENU_TOOLS, _MENU_NET, _MENU_UTILS]
-    heads  = [" RECON ", " TOOLS ", "NETWORK", " UTILS "]
+    cols   = [_MENU_RECON, _MENU_EXPLOIT, _MENU_NET, _MENU_UTILS]
+    heads  = [" RECON ", "EXPLOIT", "NETWORK", " UTILS "]
 
     def build_col(items, head, cat_def):
         col_c, ears, eyes, nose = cat_def
@@ -213,7 +235,7 @@ def show_menu():
 
     console.print(Panel(
         t,
-        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  34 modules  ◈",
+        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  45 modules  ◈",
         border_style=G2,
         padding=(0, 1),
     ))

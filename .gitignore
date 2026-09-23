@@ -22,6 +22,10 @@ data/
 # Sauf exemples de wordlists si présents
 !data/.gitkeep
 
+# Claude Code worktrees (agent isolation dirs)
+.claude/worktrees/
+.claude/
+
 # IDE
 .vscode/
 .idea/

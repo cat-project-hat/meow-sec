@@ -58,7 +58,7 @@ meow-sec/
     ├── codec.py         ← Encoder / decoder multi-format
     ├── payload.py       ← Payload library
     ├── netkit.py        ← Network utilities (ping, traceroute, CIDR scan /16)
-    ├── stress.py        ← Stress tester L3/L4/L7 (17 méthodes + bypass CF)
+    ├── stress.py        ← Stress tester L3/L4/L7 (26 méthodes + SWARM + bypass CF)
     ├── loot.py          ← Saved results viewer
     ├── revshell.py      ← Reverse shell generator (21 types)
     ├── waf.py           ← WAF / CDN fingerprinting
@@ -112,7 +112,7 @@ meow-sec/
 | 13 | **CODEC** | Encoder / decoder — Base64/32/16, URL, HTML, ROT13, hex, XOR... |
 | 14 | **PAYLOAD** | Payload library — XSS, SQLi, path traversal, LFI, SSTI... |
 | 15 | **NETKIT** | Network utilities — ping, traceroute, WHOIS, CIDR scan (jusqu'à /16) |
-| 16 | **STRESS** | Stress tester — 17 méthodes L7/L4/L3 + bypass Cloudflare (voir détail) |
+| 16 | **STRESS** | Stress tester — 26 méthodes L7/L4/L3 + SWARM multi-vecteur + bypass Cloudflare |
 | 17 | **REVSHELL** | Reverse shell generator — 21 types (Bash, Python, PHP, PowerShell, Netcat...) |
 | 18 | **WAF** | WAF / CDN fingerprinting — 11 signatures (Cloudflare, Akamai, AWS WAF...) |
 | 19 | **JWTCAT** | JWT attacker — alg:none, RS256→HS256 confusion, HMAC brute force, forge |
@@ -213,28 +213,28 @@ Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis
 ## 🐱 Menu
 
 ```
-╭──────────────── ◈  MEOW-SEC  v1.1  ::  34 modules  ◈ ────────────────╮
-│  /\_/\          /\_/\          /\_/\          /\_/\                   │
-│ ( o.o )        ( >.< )        ( ^.^ )        ( o_o )                  │
-│   > w <          > ~ <          > v <          > x <                  │
-│ ─ RECON ─      ─ TOOLS ─      ─NETWORK─      ─ UTILS ─               │
-│ ────────────   ────────────   ────────────   ────────────             │
-│  [ 1] CLAW      [11] PAWS      [ 8] PROXYCAT  [ 7] LOOT              │
-│  [ 2] PURR      [12] MEWHASH   [15] NETKIT    [20] REPORT             │
-│  [ 3] SCRATCH   [13] CODEC     [16] STRESS    [24] PHISH              │
-│  [ 4] WHISKER   [14] PAYLOAD   [21] BRUTE     [ 0] EXIT               │
-│  [ 5] HISS      [17] REVSHELL  [22] CMS                               │
-│  [ 6] CATNAP    [19] JWTCAT    [23] SSLSCAN                           │
-│  [ 9] GHOST     [32] SPRAY     [31] BUCKET                            │
-│  [10] OSINT+    [33] GRAPHQL                                           │
-│  [18] WAF       [34] 2FA                                              │
-│  [25] CORS                                                             │
-│  [26] LFI                                                             │
-│  [27] FUZZ                                                            │
-│  [28] CVE                                                             │
-│  [29] HARVEST                                                         │
-│  [30] TAKEOVER                                                        │
-╰───────────────────────────────────────────────────────────────────────╯
+╭─────────────── ◈  MEOW-SEC  v1.1  ::  45 modules  ◈ ─────────────────╮
+│  /\_/\           /\_/\           /\_/\           /\_/\                │
+│ ( o.o )         ( >.< )         ( ^.^ )         ( o_o )               │
+│   > w <           > ~ <           > v <           > x <               │
+│ ─ RECON ─       ─EXPLOIT─       ─NETWORK─       ─ UTILS ─             │
+│ ──────────────  ──────────────  ──────────────  ──────────────        │
+│  [ 1] CLAW       [ 5] HISS       [ 8] PROXYCAT   [11] PAWS            │
+│  [ 2] PURR       [25] CORS       [15] NETKIT     [12] MEWHASH          │
+│  [ 3] SCRATCH    [26] LFI        [16] STRESS     [13] CODEC            │
+│  [ 4] WHISKER    [27] FUZZ       [21] BRUTE      [14] PAYLOAD          │
+│  [ 6] CATNAP     [35] SMUGGLE    [22] CMS        [17] REVSHELL         │
+│  [ 9] GHOST      [36] XXE        [23] SSLSCAN    [19] JWTCAT           │
+│  [10] OSINT+     [38] SSTI       [31] BUCKET     [ 7] LOOT             │
+│  [18] WAF        [40] CACHE      [32] SPRAY      [20] REPORT           │
+│  [28] CVE        [41] OAUTH      [33] GRAPHQL    [24] PHISH            │
+│  [29] HARVEST    [42] DESERIA    [34] 2FA        [ 0] EXIT             │
+│  [30] TAKEOVER   [43] PROTO                                            │
+│  [37] GITDUMP                                                          │
+│  [39] SECRETSCAN                                                       │
+│  [44] BREACH                                                           │
+│  [45] SHODAN                                                           │
+╰────────────────────────────────────────────────────────────────────────╯
 ```
 
 ---
@@ -265,7 +265,7 @@ Chaque module HTTP fait `proxies=px()` — si aucun proxy disponible, connexion 
 
 ---
 
-## 💥 Détail des méthodes STRESS (17 méthodes)
+## 💥 Détail des méthodes STRESS (26 méthodes)
 
 ### Proxy healthcheck automatique
 
@@ -295,6 +295,15 @@ Avant chaque attaque avec `proxy=ON`, le module effectue un **checkup rapide** :
 | L4 | 13 | `TCP` | TCP connect flood (SOCKS) |
 | L4 | 14 | `UDP` | UDP datagram flood (raw socket) |
 | L3 | 15 | `ICMP` | ICMP echo flood |
+| L7 | 18 | `WRAITH` | TLS session renegociation flood (CPU burn côté serveur) |
+| L7 | 19 | `MIRROR` | Multi-target round-robin — frappe N cibles en parallèle |
+| L7 | 20 | `H2_CONTINUATION` | ★★★★★ HEADERS sans END_HEADERS → OOM serveur (CVE-2024-27316) |
+| L7 | 21 | `H2_RST` | ★★★★ RST Storm → alloc/dealloc par stream (CVE-2023-44487) |
+| L7 | 22 | `WS_FLOOD` | ★★★★ WebSocket PING flood → PONG obligatoire RFC 6455 |
+| L7 | 23 | `SLOW_CHUNK` | ★★★ Chunked slow body → bypass mitigations RUDY |
+| L4 | 24 | `QUIC_FLOOD` | ★★★ UDP/443 QUIC Initial flood → cibles HTTP/3 |
+| ANON | 25 | `PHANTOM_MIX` | ★★★★ Tor + I2P alternés — double pool d'exit IPs |
+| MEGA | 26 | `SWARM` | ★★★★★ MULTI-VECTEUR 5 méthodes simultanées (voir ci-dessous) |
 
 ### RESONANCE
 
@@ -330,6 +339,24 @@ Active dans le menu via l'option **"Bypass Cloudflare/JA3?"**. Utilise `curl_cff
 | `curl_cffi` | Chrome 110 / Firefox 102 | Légitime |
 
 Activé par défaut pour PULSAR.
+
+### SWARM 🌪️ (multi-vecteur — pire qu'un botnet)
+
+Lance **5 factions simultanées** sur la même cible :
+
+| Faction | % workers | Méthode |
+|---------|-----------|---------|
+| BYPASS | 30% | HTTP_BYPASS — headers X-Forwarded-For aléatoires |
+| PULSAR | 25% | Vagues synchronisées (Barrier) |
+| COOKIE | 20% | Cookie overflow — 50-100 cookies/req |
+| SLOWLORIS | 15% | Keepalive starvation |
+| TLS | 10% | TLS handshake flood |
+
+```bash
+# Exemple : 200 workers SWARM pendant 120s
+[16] STRESS → [26] SWARM → workers=200 → duration=120s
+# Distribution automatique : 60 BYPASS + 50 PULSAR + 40 COOKIE + 30 SLOW + 20 TLS
+```
 
 ---
 

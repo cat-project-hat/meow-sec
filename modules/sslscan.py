@@ -152,7 +152,7 @@ def check_http_headers(host: str, port: int = 443) -> dict:
     if not HAS_REQUESTS: return {}
     scheme = "https" if port == 443 else "http"
     try:
-        r = requests.get(f"{scheme}://{host}:{port}/",
+        r = requests.get(f"{scheme}://{host}:{port}/", timeout=10,
                          timeout=10, verify=False,
                          headers={"User-Agent": "Mozilla/5.0"},
                          allow_redirects=True)
@@ -173,7 +173,7 @@ def crt_sh_lookup(domain: str) -> list:
     """Recherche dans les logs CT via crt.sh — sans clé API"""
     if not HAS_REQUESTS: return []
     try:
-        r = requests.get(f"https://crt.sh/?q=%.{domain}&output=json",
+        r = requests.get(f"https://crt.sh/?q=%.{domain}&output=json", timeout=10,
                          timeout=15, headers={"User-Agent": "Mozilla/5.0"})
         if r.status_code != 200: return []
         entries = r.json()

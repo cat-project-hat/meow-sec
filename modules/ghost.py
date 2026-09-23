@@ -161,7 +161,7 @@ def check_username(username: str, platform: str, url_tmpl: str,
         if proxy:
             kwargs["proxies"] = proxy
 
-        r = requests.get(url, **kwargs)
+        r = requests.get(url, **kwargs, timeout=10)
 
         if check_type == "status_200":
             exists = r.status_code == 200

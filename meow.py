@@ -7,24 +7,68 @@ By cat-project-hat // 2026
 For authorized penetration testing, CTF challenges and security research only.
 Unauthorized use is illegal. Use only on systems you own or have explicit written permission to test.
 
-24 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
+34 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
             PROXYCAT · PAWS · MEWHASH · CODEC · PAYLOAD · NETKIT · STRESS · LOOT
             REVSHELL · WAF · JWTCAT · REPORT · BRUTE · CMS · SSLSCAN · PHISH
+            CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA
 """
 
 import sys
 import os
 import time
 import warnings
+
+# Ajouter le répertoire courant au path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# ─── AUTO-INSTALL DEPENDENCIES ───────────────────────────────
+def _ensure_deps():
+    """Installe automatiquement les dépendances manquantes au démarrage."""
+    import subprocess, importlib
+
+    req_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
+    if not os.path.exists(req_file):
+        return
+
+    # Mapping package_name -> import_name
+    pkg_map = {
+        "rich":       "rich",
+        "colorama":   "colorama",
+        "requests":   "requests",
+        "PySocks":    "socks",
+        "curl_cffi":  "curl_cffi",
+    }
+
+    missing = []
+    for pkg, imp in pkg_map.items():
+        try:
+            importlib.import_module(imp)
+        except ImportError:
+            missing.append(pkg)
+
+    if missing:
+        print(f"[MEOW-SEC] Installing missing packages: {', '.join(missing)}")
+        for pkg in missing:
+            for pip in [
+                [sys.executable, "-m", "pip", "install", "--quiet", pkg],
+            ]:
+                try:
+                    result = subprocess.run(pip, capture_output=True, text=True)
+                    if result.returncode == 0:
+                        print(f"  [OK] {pkg}")
+                    else:
+                        print(f"  [!!] {pkg} failed — run: pip install {pkg}")
+                except Exception as e:
+                    print(f"  [!!] {pkg} error: {e}")
+
+_ensure_deps()
+
 warnings.filterwarnings("ignore", message="Unverified HTTPS")
 try:
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 except Exception:
     pass
-
-# Ajouter le répertoire courant au path
-sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     from rich.console import Console
@@ -35,7 +79,7 @@ try:
     import colorama
     colorama.init()
 except ImportError:
-    print("Missing dependencies!\nRun: pip install rich colorama requests")
+    print("Missing dependencies!\nRun: pip install rich colorama requests PySocks")
     sys.exit(1)
 
 from core.ui import (
@@ -51,9 +95,9 @@ def boot():
     console.print()
 
     BOOT_MSGS = [
-        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 20 modules active"),
+        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 34 modules active"),
         (f"[{OR}]WARN[/]", "authorized targets only"),
-        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 24 modules active"),
+        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 34 modules active"),
     ]
     for tag, msg in BOOT_MSGS:
         time.sleep(0.08)
@@ -163,6 +207,46 @@ def dispatch(choice: str):
         from modules import phish
         phish.run()
 
+    elif choice in ("25", "cors"):
+        from modules import cors
+        cors.run()
+
+    elif choice in ("26", "lfi"):
+        from modules import lfi
+        lfi.run()
+
+    elif choice in ("27", "fuzz"):
+        from modules import fuzz
+        fuzz.run()
+
+    elif choice in ("28", "cve"):
+        from modules import cve
+        cve.run()
+
+    elif choice in ("29", "harvest"):
+        from modules import harvest
+        harvest.run()
+
+    elif choice in ("30", "takeover"):
+        from modules import takeover
+        takeover.run()
+
+    elif choice in ("31", "bucket"):
+        from modules import bucket
+        bucket.run()
+
+    elif choice in ("32", "spray"):
+        from modules import spray
+        spray.run()
+
+    elif choice in ("33", "graphql"):
+        from modules import graphql
+        graphql.run()
+
+    elif choice in ("34", "2fa", "twofa"):
+        from modules import twofa
+        twofa.run()
+
     elif choice in ("0", "exit", "quit", "q"):
         return False
 
@@ -216,6 +300,18 @@ def main():
             "sslscan":  "23",
             "phish":    "24",
             "phishing": "24",
+            "cors":     "25",
+            "lfi":      "26",
+            "rfi":      "26",
+            "fuzz":     "27",
+            "cve":      "28",
+            "harvest":  "29",
+            "takeover": "30",
+            "bucket":   "31",
+            "spray":    "32",
+            "graphql":  "33",
+            "2fa":      "34",
+            "twofa":    "34",
         }
         mod = args[0].lower()
         if mod in module_map:
@@ -282,6 +378,11 @@ def _print_help():
   brute     HTTP brute force          cms       CMS detect
   ssl       SSL/TLS scanner           phish     Phishing tunnel
   report    HTML report               loot      View results
+  cors      CORS misconfig tester     lfi       LFI/RFI tester
+  fuzz      Parameter fuzzer          cve       CVE lookup
+  harvest   Email harvester           takeover  Subdomain takeover
+  bucket    Cloud bucket finder       spray     Password spraying
+  graphql   GraphQL tester            2fa       2FA bypass
 
 [{G1}]Proxy:[/]
   Run PROXYCAT first to download & validate proxies.

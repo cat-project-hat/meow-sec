@@ -84,7 +84,7 @@ def _dns_query(host: str, qtype: str) -> list:
         r = requests.get(
             "https://dns.google/resolve",
             params={"name": host, "type": qtype},
-            timeout=5,
+            timeout=10,
             headers={"Accept": "application/dns-json"}
         )
         if r.status_code == 200:

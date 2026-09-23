@@ -292,7 +292,7 @@ def online_lookup(hash_str: str) -> str | None:
 
     # 2. md5.gromweb.com — pas de clé
     try:
-        r = requests.get("https://md5.gromweb.com/",
+        r = requests.get("https://md5.gromweb.com/", timeout=10,
                          params={"md5": h}, timeout=8, headers=hdr)
         m = _re.search(r'<em class="long-string">([^<]+)</em>', r.text)
         if m:
@@ -302,7 +302,7 @@ def online_lookup(hash_str: str) -> str | None:
 
     # 3. md5hashing.net — pas de clé
     try:
-        r = requests.get(f"https://md5hashing.net/hash/md5/{h}",
+        r = requests.get(f"https://md5hashing.net/hash/md5/{h}", timeout=10,
                          timeout=8, headers=hdr)
         m = _re.search(r'<td[^>]*>\s*([^<]{1,80})\s*</td>', r.text)
         if m:
@@ -314,7 +314,7 @@ def online_lookup(hash_str: str) -> str | None:
 
     # 4. hashtoolkit.com — pas de clé
     try:
-        r = requests.get(f"https://hashtoolkit.com/reverse-hash/?hash={h}",
+        r = requests.get(f"https://hashtoolkit.com/reverse-hash/?hash={h}", timeout=10,
                          timeout=8, headers=hdr)
         m = _re.search(r'<span[^>]+title="Decrypted Text"[^>]*>([^<]+)</span>', r.text)
         if m:
@@ -335,7 +335,7 @@ def hibp_password(password: str) -> int:
     if not HAS_REQUESTS:
         warn("requests not available"); return -1
     try:
-        r = requests.get(f"https://api.pwnedpasswords.com/range/{prefix}",
+        r = requests.get(f"https://api.pwnedpasswords.com/range/{prefix}", timeout=10,
                          timeout=8, headers={"User-Agent": "MEOW-SEC/1.0"})
         for line in r.text.splitlines():
             h, count = line.split(":")

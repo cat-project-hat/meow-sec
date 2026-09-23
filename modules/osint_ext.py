@@ -108,7 +108,7 @@ def _dns_mx(domain: str) -> list:
     if not HAS_REQUESTS:
         return []
     try:
-        r = requests.get("https://dns.google/resolve",
+        r = requests.get("https://dns.google/resolve", timeout=10,
                          params={"name": domain, "type": "MX"},
                          timeout=5, headers={"Accept": "application/dns-json"})
         if r.status_code == 200:
@@ -146,7 +146,7 @@ def check_password_pwned(password: str):
         err("requests not available."); return
 
     try:
-        r = requests.get(f"https://api.pwnedpasswords.com/range/{prefix}",
+        r = requests.get(f"https://api.pwnedpasswords.com/range/{prefix}", timeout=10,
                          timeout=8, headers={"User-Agent": "MEOW-SEC/1.0"})
         if r.status_code == 200:
             lines = r.text.splitlines()
@@ -255,7 +255,7 @@ def ip_reputation(ip: str):
 
         # Tor exit node check (public list)
         try:
-            r = requests.get("https://check.torproject.org/torbulkexitlist",
+            r = requests.get("https://check.torproject.org/torbulkexitlist", timeout=10,
                              timeout=8, headers={"User-Agent": "MEOW-SEC/1.0"})
             if r.status_code == 200 and ip in r.text:
                 warn(f"[{RD}]IP {ip} is a TOR EXIT NODE![/]")
@@ -384,7 +384,7 @@ def paste_search(query: str):
     if HAS_REQUESTS:
         # Psbdmp a une API publique
         try:
-            r = requests.get(f"https://psbdmp.ws/api/search/{query}",
+            r = requests.get(f"https://psbdmp.ws/api/search/{query}", timeout=10,
                              timeout=10, headers={"User-Agent": "MEOW-SEC/1.0"})
             if r.status_code == 200:
                 data = r.json()

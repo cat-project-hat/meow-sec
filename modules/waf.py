@@ -261,7 +261,7 @@ def detect_waf(target: str, probe: bool = True) -> dict:
         probe_results = []
         for probe_name, probe_path in WAF_PROBES[:4]:
             try:
-                r2 = requests.get(url + probe_path, headers=NORMAL_HEADERS,
+                r2 = requests.get(url + probe_path, headers=NORMAL_HEADERS, timeout=10,
                                   timeout=8, allow_redirects=False, verify=False, proxies=_px())
                 probe_results.append((probe_name, r2.status_code, probe_path))
                 time.sleep(0.3)

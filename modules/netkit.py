@@ -316,6 +316,78 @@ def tcp_traceroute(host: str, port: int = 80, max_hops: int = 20):
     console.print()
     print_result_table(f"Traceroute :: {host}", ["Hop", "IP", "Hostname", "RTT"], rows)
 
+# ─── PORT PING ───────────────────────────────────────────────
+
+def _port_ping():
+    """Test de connectivité TCP sur un ou plusieurs ports — port ping."""
+    from rich.rule import Rule
+    from rich.prompt import Prompt, IntPrompt
+    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn
+
+    console.print(Rule(f"[{G1}] PORT PING ", style=G2))
+
+    host = Prompt.ask(f"  [{G1}]◈ Target host[/]").strip()
+    if not host:
+        err("No target."); return
+
+    mode = ask_choice(
+        f"  [{G1}][1][/] Single port   [{G1}][2][/] Port range   [{G1}][3][/] Common ports list",
+        "1"
+    )
+
+    if mode == "1":
+        port = IntPrompt.ask(f"  [{G1}]◈ Port[/]", default=80)
+        ports = [port]
+    elif mode == "2":
+        p1 = IntPrompt.ask(f"  [{G1}]◈ Start port[/]", default=1)
+        p2 = IntPrompt.ask(f"  [{G1}]◈ End port[/]", default=1024)
+        ports = list(range(p1, p2 + 1))
+    else:
+        ports = [21,22,23,25,53,80,110,143,443,445,3306,3389,5432,5900,6379,8080,8443,8888,27017]
+        info(f"Testing {len(ports)} common ports...")
+
+    timeout = float(Prompt.ask(f"  [{G1}]◈ Timeout (s)[/]", default="1"))
+    workers = min(100, max(1, len(ports)))
+
+    console.print()
+    results = []
+
+    def _check(port):
+        try:
+            t0 = time.perf_counter()
+            with socket.create_connection((host, port), timeout=timeout):
+                rtt = (time.perf_counter() - t0) * 1000
+                return (port, True, f"{rtt:.1f}ms")
+        except Exception:
+            return (port, False, "—")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = {ex.submit(_check, p): p for p in ports}
+        with Progress(SpinnerColumn(style=G1),
+                      TextColumn(f"[{G1}]Probing ports"),
+                      BarColumn(bar_width=30, style=G2, complete_style=G1),
+                      MofNCompleteColumn(),
+                      console=console) as prog:
+            task = prog.add_task("", total=len(ports))
+            for f in concurrent.futures.as_completed(futures):
+                results.append(f.result())
+                prog.advance(task)
+
+    results.sort(key=lambda x: x[0])
+    open_ports  = [(str(p), "OPEN",   rtt) for p, s, rtt in results if s]
+    closed_ports = [(str(p), "closed", rtt) for p, s, rtt in results if not s]
+
+    console.print()
+    if open_ports:
+        print_result_table(f"Port Ping :: {host}",
+            ["PORT", "STATUS", "RTT"], open_ports, color_col=1)
+        ok(f"{len(open_ports)} open port(s) found")
+    else:
+        warn("No open ports found.")
+
+    if mode in ("2", "3") and closed_ports:
+        info(f"{len(closed_ports)} closed/filtered")
+
 # ─── MAIN NETKIT ─────────────────────────────────────────────
 
 def run():
@@ -329,6 +401,7 @@ def run():
         console.print(f"  [{G1}][3][/] HTTP request builder (custom method/headers/body)")
         console.print(f"  [{G1}][4][/] IP / CIDR calculator")
         console.print(f"  [{G1}][5][/] TCP traceroute")
+        console.print(f"  [{G1}][6][/] Port ping          (TCP connect test — single/range/common)")
         console.print(f"  [{G1}][0][/] Back")
         console.print()
         choice = ask_choice("NETKIT", "0")
@@ -337,12 +410,15 @@ def run():
         elif choice == "2": _banner_menu()
         elif choice == "3": http_request_builder()
         elif choice == "4":
+            from rich.prompt import Prompt
             cidr = Prompt.ask(f"  [{G1}]◈ IP or CIDR[/]").strip()
             if cidr: ip_calc(cidr)
         elif choice == "5":
+            from rich.prompt import Prompt, IntPrompt
             host = Prompt.ask(f"  [{G1}]◈ Target host[/]").strip()
             port = IntPrompt.ask(f"  [{G1}]◈ Port[/]", default=80)
             if host: tcp_traceroute(host, port)
+        elif choice == "6": _port_ping()
         console.print()
 
 def _ping_menu():

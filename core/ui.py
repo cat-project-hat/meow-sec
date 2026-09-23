@@ -90,7 +90,7 @@ def show_module_banner(module: str):
         "codec":    ("CODEC",    "Encoder / Decoder",         CY),
         "payload":  ("PAYLOAD",  "Payload Library",           RD),
         "netkit":   ("NETKIT",   "Network Utilities",         CY),
-        "stress":   ("STRESS",   "Load & Stress Tester",      RD),
+        "stress":   ("STRESS",   "Stress Tester (17 methods)", RD),
         "revshell": ("REVSHELL", "Reverse Shell Generator",   G1),
         "waf":      ("WAF",      "WAF / CDN Fingerprinting",  CY),
         "jwtcat":   ("JWTCAT",   "JWT Attacker",              OR),
@@ -100,6 +100,16 @@ def show_module_banner(module: str):
         "cms":      ("CMS",      "CMS Fingerprinting",        CY),
         "sslscan":  ("SSLSCAN",  "SSL/TLS Deep Scanner",      G1),
         "phish":    ("PHISH",    "Phishing + Tunnel (red team)", RD),
+        "cors":     ("CORS",     "CORS Misconfiguration Tester", OR),
+        "lfi":      ("LFI",      "Local/Remote File Inclusion",  RD),
+        "fuzz":     ("FUZZ",     "Parameter & Endpoint Fuzzer",  OR),
+        "cve":      ("CVE",      "CVE Lookup & Version Matcher", CY),
+        "harvest":  ("HARVEST",  "Email Harvester",              CY),
+        "takeover": ("TAKEOVER", "Subdomain Takeover Checker",   OR),
+        "bucket":   ("BUCKET",   "Cloud Bucket Finder",          CY),
+        "spray":    ("SPRAY",    "Password Spraying",            RD),
+        "graphql":  ("GRAPHQL",  "GraphQL Security Tester",      CY),
+        "2fa":      ("2FA",      "2FA Bypass Tester",            OR),
     }
     name, desc, color = names.get(module.lower(), (module.upper(), "", G1))
     console.print(Rule(f"[bold {color}] {name} [/][{DM}] {desc} ", style=G2))
@@ -108,15 +118,21 @@ def show_module_banner(module: str):
 
 # Format : (key, name, short_desc)
 _MENU_RECON = [
-    ("1",  "CLAW",    "ports"),
-    ("2",  "PURR",    "HTTP recon"),
-    ("3",  "SCRATCH", "dir brute"),
-    ("4",  "WHISKER", "DNS/WHOIS"),
-    ("5",  "HISS",    "SQLi/XSS+"),
-    ("6",  "CATNAP",  "subdomains"),
-    ("9",  "GHOST",   "usernames"),
-    ("10", "OSINT+",  "email/IP"),
-    ("18", "WAF",     "WAF detect"),
+    ("1",  "CLAW",     "ports"),
+    ("2",  "PURR",     "HTTP recon"),
+    ("3",  "SCRATCH",  "dir brute"),
+    ("4",  "WHISKER",  "DNS/WHOIS"),
+    ("5",  "HISS",     "SQLi/XSS+"),
+    ("6",  "CATNAP",   "subdomains"),
+    ("9",  "GHOST",    "usernames"),
+    ("10", "OSINT+",   "email/IP"),
+    ("18", "WAF",      "WAF detect"),
+    ("25", "CORS",     "CORS misconfig"),
+    ("26", "LFI",      "LFI/RFI"),
+    ("27", "FUZZ",     "param fuzz"),
+    ("28", "CVE",      "CVE lookup"),
+    ("29", "HARVEST",  "email harvest"),
+    ("30", "TAKEOVER", "subdomain tkover"),
 ]
 _MENU_TOOLS = [
     ("11", "PAWS",    "passgen"),
@@ -125,6 +141,9 @@ _MENU_TOOLS = [
     ("14", "PAYLOAD", "payloads"),
     ("17", "REVSHELL","rev shell"),
     ("19", "JWTCAT",  "JWT atk"),
+    ("32", "SPRAY",   "pwd spray"),
+    ("33", "GRAPHQL", "GraphQL atk"),
+    ("34", "2FA",     "2FA bypass"),
 ]
 _MENU_NET = [
     ("8",  "PROXYCAT","proxies"),
@@ -133,6 +152,7 @@ _MENU_NET = [
     ("21", "BRUTE",   "HTTP brute"),
     ("22", "CMS",     "CMS detect"),
     ("23", "SSLSCAN", "SSL/TLS"),
+    ("31", "BUCKET",  "cloud buckets"),
 ]
 _MENU_UTILS = [
     ("7",  "LOOT",    "results"),
@@ -193,7 +213,7 @@ def show_menu():
 
     console.print(Panel(
         t,
-        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  24 modules  ◈",
+        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  34 modules  ◈",
         border_style=G2,
         padding=(0, 1),
     ))

@@ -163,7 +163,7 @@ cd meow-sec
 # Dépendances Python
 pip install -r requirements.txt
 # OU
-pip install rich colorama requests
+pip install rich colorama requests PySocks
 
 # Lancer
 python meow.py
@@ -179,6 +179,7 @@ python meow.py phish
 rich>=13.7.0
 colorama>=0.4.6
 requests>=2.31.0
+PySocks>=1.7.1
 ```
 
 ---

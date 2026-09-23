@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtualenv
+venv/
+env/
+.venv/
+
+# Data & logs (résultats de scans, credentials capturés)
+data/
+*.log
+*.json
+
+# Sauf exemples de wordlists si présents
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Fichiers sensibles
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+proxies.txt
+wordlist*.txt

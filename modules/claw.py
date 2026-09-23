@@ -195,6 +195,6 @@ def _save_results(target: str, ip: str, ports: list):
     os.makedirs(out_dir, exist_ok=True)
     fname = os.path.join(out_dir, f"claw_{target.replace('://', '_').replace('/', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
     data = {"target": target, "ip": ip, "timestamp": datetime.now().isoformat(), "results": ports}
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
     ok(f"Results saved → [{CY}]{os.path.basename(fname)}[/]")

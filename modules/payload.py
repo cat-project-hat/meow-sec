@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: PAYLOAD — Payload Library & Generator
   Bibliothèque de payloads pour tests de sécurité autorisés (CTF, pentest)
@@ -9,7 +9,7 @@ MEOW-SEC :: PAYLOAD — Payload Library & Generator
 import os, json, re
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, G1, G2, CY, OR, RD, DM)
 from rich.panel import Panel
 from rich.table import Table

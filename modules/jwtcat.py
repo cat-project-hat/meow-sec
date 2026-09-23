@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: JWTCAT — JWT Attacker
   · Décodage complet (header, payload, signature)
@@ -10,7 +10,7 @@ MEOW-SEC :: JWTCAT — JWT Attacker
 import base64, json, hmac, hashlib, os, time
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, G1, G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN, CAT_FOUND, CAT_PWNED
 from rich.panel   import Panel
@@ -254,7 +254,7 @@ def _rs256_menu():
 
     # Load from file if path given
     if os.path.exists(pubkey):
-        pubkey = open(pubkey).read().strip()
+        pubkey = open(pubkey, encoding="utf-8").read().strip()
 
     forged = attack_rs256_hs256(token, pubkey)
     if forged:
@@ -344,7 +344,7 @@ def _forge_menu():
 def _save_forged(variants: list, tag: str):
     os.makedirs("data", exist_ok=True)
     fname = f"data/jwt_{tag}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         for name, tok in variants:
             f.write(f"# {name}\n{tok}\n\n")
     ok(f"Saved: {fname}")

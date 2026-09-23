@@ -14,8 +14,10 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from core.ui import (console, ok, err, info, warn, find,
-                     show_module_banner, ask_choice, G1, G2, CY, OR, RD, DM)
+from core.ui import (
+                     console, show_module_banner, ok, err, info,
+                     warn, find, ask_choice, G1, G2,
+                     CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_FOUND, CAT_PWNED
 from rich.panel   import Panel
 from rich.table   import Table
@@ -239,7 +241,7 @@ def _start_tunnel(kind: str, port: int) -> subprocess.Popen | None:
             cmd, shell=True,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, bufsize=1
-        )
+        , encoding="utf-8")
         return proc
     except Exception as e:
         err(f"Tunnel launch failed: {e}")

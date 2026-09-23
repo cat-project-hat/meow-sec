@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: PAWS — Password Generator
   · Random passwords (custom charset, length, rules)
@@ -11,7 +11,7 @@ MEOW-SEC :: PAWS — Password Generator
 import os, json, random, string, re, math
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, print_result_table, G1, G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_FOUND
 from rich.panel import Panel

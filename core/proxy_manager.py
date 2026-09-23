@@ -166,13 +166,13 @@ class ProxyManager:
 
     def _save(self):
         os.makedirs(os.path.dirname(PROXY_FILE), exist_ok=True)
-        with open(PROXY_FILE, "w") as f:
+        with open(PROXY_FILE, "w", encoding="utf-8") as f:
             json.dump(self.good, f, indent=2)
 
     def _load(self):
         if os.path.exists(PROXY_FILE):
             try:
-                with open(PROXY_FILE) as f:
+                with open(PROXY_FILE, encoding="utf-8") as f:
                     self.good = json.load(f)
                 info(f"Loaded [{G1}]{len(self.good)}[/] cached proxies from disk.")
             except Exception:

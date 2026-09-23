@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: WAF — WAF / CDN Fingerprinting
   · Détecte Cloudflare, Akamai, AWS WAF, Imperva, ModSecurity...
@@ -9,7 +9,7 @@ import re, time, os, json
 from datetime import datetime
 from urllib.parse import urlparse
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, print_result_table, G1, G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN, CAT_FOUND
 from rich.panel   import Panel
@@ -345,7 +345,7 @@ def _display_results(target: str, data: dict):
 def _save(target: str, data: dict):
     os.makedirs("data", exist_ok=True)
     fname = f"data/waf_{target.replace('https://','').replace('http://','').replace('/','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         import json
         d = {"target": target, **data}
         d["waf"] = {k: {**v, "color": str(v.get("color",""))} for k,v in d.get("waf",{}).items()}
@@ -389,7 +389,7 @@ def run():
             path = Prompt.ask(f"  [{G1}]◈ File with URLs (one per line)[/]").strip()
             if not os.path.exists(path):
                 err(f"File not found: {path}"); continue
-            urls = [l.strip() for l in open(path) if l.strip()]
+            urls = [l.strip() for l in open(path, encoding="utf-8") if l.strip()]
             info(f"Scanning {len(urls)} targets...")
             for u in urls:
                 console.print(f"\n  [{G2}]──────── {u} ────────[/]")

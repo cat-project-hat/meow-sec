@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: CODEC — Encoder / Decoder Swiss Army Knife
   · Base64, Base32, Base16/Hex
@@ -14,7 +14,7 @@ MEOW-SEC :: CODEC — Encoder / Decoder Swiss Army Knife
 import base64, urllib.parse, html, json, re, string
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, G1, G2, CY, OR, RD, DM)
 from rich.panel import Panel
 from rich.table import Table

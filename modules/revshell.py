@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: REVSHELL — Reverse Shell Generator
   · 15+ langages / méthodes
@@ -6,7 +6,7 @@ MEOW-SEC :: REVSHELL — Reverse Shell Generator
   · Listener command inclus
 """
 import base64, os
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, G1, G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_HACKER
 from rich.panel   import Panel
@@ -318,7 +318,7 @@ def _generate_menu():
     if Confirm.ask(f"  [{G2}]◈ Save to file?[/]", default=False):
         os.makedirs("data", exist_ok=True)
         fname = f"data/revshell_{key}_{ip}_{port}.txt"
-        with open(fname, "w") as f:
+        with open(fname, "w", encoding="utf-8") as f:
             f.write(f"# {shell['name']}\n# LHOST={ip}  LPORT={port}\n\n")
             f.write(cmd + "\n\n")
             f.write(f"# Listener:\n{listener_cmd}\n")

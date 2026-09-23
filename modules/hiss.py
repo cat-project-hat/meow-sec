@@ -440,6 +440,6 @@ def _save(target, vulns):
     os.makedirs(out_dir, exist_ok=True)
     slug = target.replace("://", "_").replace("/", "_").replace(".", "_")[:40]
     fname = os.path.join(out_dir, f"hiss_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": target, "vulns": vulns}, f, indent=2)
     ok(f"Results saved → [{CY}]{os.path.basename(fname)}[/]")

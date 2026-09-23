@@ -12,8 +12,10 @@ import concurrent.futures
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
 
-from core.ui import (console, ok, err, info, warn, find, ask_choice,
-                     show_module_banner, G1, G2, CY, OR, RD, DM)
+from core.ui import (
+                     console, ok, err, info, warn,
+                     find, show_module_banner, ask_choice, G1, G2,
+                     CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN, CAT_PWNED
 from rich.panel   import Panel
 from rich.table   import Table
@@ -401,7 +403,7 @@ def _load_wordlists() -> tuple[list, list]:
 def _save_creds(url, method, found):
     os.makedirs("data", exist_ok=True)
     fname = f"data/brute_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"url": url, "method": method, "found": found,
                    "timestamp": datetime.now().isoformat()}, f, indent=2)
     ok(f"Saved: {fname}")

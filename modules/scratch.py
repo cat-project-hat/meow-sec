@@ -84,7 +84,7 @@ def _check(url: str, timeout: float = 6.0) -> dict:
             ctx = ssl.create_default_context()
             ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
             req = urllib.request.Request(url, headers={"User-Agent": "MEOW-SCRATCH/1.0"})
-            with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
+            with urllib.request.urlopen(req, timeout=timeout, context=ctx, encoding="utf-8") as resp:
                 body = resp.read(4096)
                 return {"url": url, "status": resp.status,
                         "size": len(body), "ok": True, "location": "",
@@ -163,7 +163,7 @@ def run(target: str = None):
         path = Prompt.ask(f"  [{G1}]◈ Wordlist path[/]").strip()
         if not os.path.exists(path):
             err(f"File not found: {path}"); return
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             words = [l.strip() for l in f if l.strip()]
     else:
         words = WORDLIST_COMMON
@@ -252,6 +252,6 @@ def _save(target, found):
     os.makedirs(out_dir, exist_ok=True)
     slug = target.replace("://", "_").replace("/", "_").replace(".", "_")
     fname = os.path.join(out_dir, f"scratch_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": target, "found": found}, f, indent=2)
     ok(f"Results saved → [{CY}]{os.path.basename(fname)}[/]")

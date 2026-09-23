@@ -96,7 +96,7 @@ def run(target: str = None):
         path = Prompt.ask(f"  [{G1}]◈ Wordlist path[/]").strip()
         if not os.path.exists(path):
             err(f"File not found: {path}"); return
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             words = [l.strip() for l in f if l.strip()]
     else:
         words = SUBDOMAINS[:40]
@@ -156,6 +156,6 @@ def _save(target, found):
     os.makedirs(out_dir, exist_ok=True)
     slug = target.replace(".", "_")
     fname = os.path.join(out_dir, f"catnap_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": target, "found": found}, f, indent=2)
     ok(f"Results saved → [{CY}]{os.path.basename(fname)}[/]")

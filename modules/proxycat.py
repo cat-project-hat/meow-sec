@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: PROXYCAT — Proxy Downloader / Checker / Rotator
 """
@@ -153,12 +153,12 @@ def _export():
 
     if fmt == "1":
         fname = os.path.join(out_dir, f"proxies_{ts}.txt")
-        with open(fname, "w") as f:
+        with open(fname, "w", encoding="utf-8") as f:
             for p in pm.good:
                 f.write(p["proxy"] + "\n")
         ok(f"Exported [{G1}]{len(pm.good)}[/] proxies → [{CY}]{os.path.basename(fname)}[/]")
     else:
         fname = os.path.join(out_dir, f"proxies_{ts}.json")
-        with open(fname, "w") as f:
+        with open(fname, "w", encoding="utf-8") as f:
             json.dump(pm.good, f, indent=2)
         ok(f"Exported → [{CY}]{os.path.basename(fname)}[/]")

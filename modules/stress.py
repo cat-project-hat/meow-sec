@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: STRESS — Load & Stress Testing
   · L7 HTTP  (GET, POST, Slowloris)
@@ -13,7 +13,7 @@ import concurrent.futures
 from datetime import datetime
 from urllib.parse import urlparse
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, G1, G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN, CAT_HACKER
 from rich.panel   import Panel
@@ -428,7 +428,7 @@ def _save_results(target, method, stats: Stats, workers, duration):
         "bytes_sent": stats.bytes_sent,
         "timestamp": datetime.now().isoformat()
     }
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
     ok(f"Results saved: [bold]{fname}[/]")
 

@@ -391,6 +391,6 @@ def _save(target, mode):
     out_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     os.makedirs(out_dir, exist_ok=True)
     fname = os.path.join(out_dir, f"whisker_{target.replace('.','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": target, "mode": mode, "time": datetime.now().isoformat()}, f)
     ok(f"Scan logged → [{CY}]{os.path.basename(fname)}[/]")

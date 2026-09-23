@@ -66,7 +66,7 @@ def _get(url: str, timeout: int = 8) -> dict:
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             req = urllib.request.Request(url, headers={"User-Agent": "MEOW-SEC/1.0"})
-            with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
+            with urllib.request.urlopen(req, timeout=timeout, context=ctx, encoding="utf-8") as resp:
                 body = resp.read(2000).decode(errors="ignore")
                 return {"status": resp.status, "headers": dict(resp.headers),
                         "body": body, "url": str(resp.url), "ok": True}
@@ -249,6 +249,6 @@ def _save(target, headers, paths):
     os.makedirs(out_dir, exist_ok=True)
     slug = target.replace("://", "_").replace("/", "_").replace(".", "_")
     fname = os.path.join(out_dir, f"purr_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": target, "headers": headers, "paths": paths}, f, indent=2, default=str)
     ok(f"Results saved → [{CY}]{os.path.basename(fname)}[/]")

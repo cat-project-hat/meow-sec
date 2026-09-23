@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: OSINT+ — Extended OSINT Extensions
   · Email breach check (HaveIBeenPwned public API)
@@ -12,7 +12,7 @@ MEOW-SEC :: OSINT+ — Extended OSINT Extensions
 import re, os, json, time
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, print_result_table,
                      G1, G2, CY, OR, RD, DM)
 from core.cats import CAT_RECON, CAT_FOUND, cat_talk
@@ -226,7 +226,7 @@ def _save_dorks(target: str):
     os.makedirs(out_dir, exist_ok=True)
     slug = target.replace(".", "_")
     fname = os.path.join(out_dir, f"dorks_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         f.write(f"# MEOW-SEC Google Dorks for: {target}\n")
         f.write(f"# Generated: {datetime.now()}\n\n")
         for name, tmpl in DORK_TEMPLATES.items():

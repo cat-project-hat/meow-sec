@@ -11,8 +11,10 @@ MEOW-SEC :: SSLSCAN — SSL/TLS Deep Scanner
 import ssl, socket, json, os, time, re
 from datetime import datetime, timezone
 
-from core.ui import (console, ok, err, info, warn, find, ask_choice,
-                     show_module_banner, print_result_table, G1, G2, CY, OR, RD, DM)
+from core.ui import (
+                     console, ok, err, info, warn,
+                     find, show_module_banner, ask_choice, print_result_table, G1,
+                     G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN
 from rich.panel   import Panel
 from rich.table   import Table
@@ -350,7 +352,7 @@ def _display_headers(hdrs: dict):
 def _save(host, port, mode):
     os.makedirs("data", exist_ok=True)
     fname = f"data/ssl_{host}_{port}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": host, "port": port, "mode": mode,
                    "timestamp": datetime.now().isoformat()}, f, indent=2)
     ok(f"Saved: {fname}")

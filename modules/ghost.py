@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: GHOST — Username Generator + Multi-Platform Existence Checker
 OSINT tool inspired by Sherlock / WhatsMyName — built from scratch
@@ -7,9 +7,10 @@ import re, os, json, time, random
 import concurrent.futures
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
-                     show_module_banner, ask_choice, print_result_table,
-                     G1, G2, CY, OR, RD, DM)
+from core.ui import (
+                     console, show_module_banner, ok, err, info,
+                     warn, find, ask_choice, print_result_table, G1,
+                     G2, CY, OR, RD, DM)
 from core.cats import CAT_SCAN, CAT_FOUND, cat_talk
 from rich.panel import Panel
 from rich.table import Table
@@ -374,7 +375,7 @@ def _save(username, results):
     slug = re.sub(r"[^a-z0-9_]", "_", username.lower())[:30]
     fname = os.path.join(out_dir, f"ghost_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
     found = [r for r in results if r["exists"]]
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"username": username, "found": found, "all": results}, f, indent=2)
     ok(f"Results saved → [{CY}]{os.path.basename(fname)}[/]")
 

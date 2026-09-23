@@ -75,7 +75,7 @@ def run():
         idx = int(choice) - 1
         if 0 <= idx < len(files):
             fpath = os.path.join(DATA_DIR, files[idx])
-            with open(fpath) as f:
+            with open(fpath, encoding="utf-8") as f:
                 content = json.load(f)
             console.print(Panel(
                 Syntax(json.dumps(content, indent=2), "json",

@@ -11,8 +11,10 @@ import re, os, json, time
 from datetime import datetime
 from urllib.parse import urljoin
 
-from core.ui import (console, ok, err, info, warn, find, ask_choice,
-                     show_module_banner, print_result_table, G1, G2, CY, OR, RD, DM)
+from core.ui import (
+                     console, ok, err, info, warn,
+                     find, show_module_banner, ask_choice, print_result_table, G1,
+                     G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN, CAT_FOUND
 from rich.panel   import Panel
 from rich.table   import Table
@@ -471,7 +473,7 @@ def _display_cms(data: dict):
 def _save_results(url, mode):
     os.makedirs("data", exist_ok=True)
     fname = f"data/cms_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump({"target": url, "mode": mode,
                    "timestamp": datetime.now().isoformat()}, f, indent=2)
     ok(f"Saved: {fname}")

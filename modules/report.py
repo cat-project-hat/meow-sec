@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 MEOW-SEC :: REPORT — HTML Report Generator
   · Agrège tous les JSON de data/
@@ -8,7 +8,7 @@ MEOW-SEC :: REPORT — HTML Report Generator
 import os, json, glob
 from datetime import datetime
 
-from core.ui import (console, ok, err, info, warn, find,
+from core.ui import (console, show_module_banner, ok, err, info, warn, find,
                      ask_choice, G1, G2, CY, OR, RD, DM)
 from core.cats import cat_talk, CAT_SCAN
 from rich.panel   import Panel
@@ -356,7 +356,7 @@ def run():
     try:
         import subprocess
         if Confirm.ask(f"  [{OR}]◈ Open in browser now?[/]", default=True):
-            subprocess.Popen(["start", fname], shell=True)
+            subprocess.Popen(["start", fname], shell=True, encoding="utf-8")
     except Exception:
         pass
 

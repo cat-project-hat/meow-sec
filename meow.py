@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-MEOW-SEC v1.1 — Cat-Themed Security Toolkit
+MEOW-SEC v1.5 — Cat-Themed Security Toolkit
 By cat-project-hat // 2026
 
 For authorized penetration testing, CTF challenges and security research only.
 Unauthorized use is illegal. Use only on systems you own or have explicit written permission to test.
 
-52 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
+61 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
             PROXYCAT · PAWS · MEWHASH · CODEC · PAYLOAD · NETKIT · STRESS · LOOT
             REVSHELL · WAF · JWTCAT · REPORT · BRUTE · CMS · SSLSCAN · PHISH
             CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA
             SMUGGLE · XXE · GITDUMP · SSTI · SECRETSCAN · CACHE · OAUTH · DESERIA · PROTO
             BREACH · SHODAN · TRACK · SQLI · CMDI · NOSQLI · ORMI · WPSCAN · FRONTSCAN
+            IDOR · UPLOAD · RACE · LDAPI · EMAILSEC · URLSPOOF · MAILSPOOF · IPLOOKUP · PHONELOOKUP
 """
 
 import sys
@@ -97,9 +98,9 @@ def boot():
     console.print()
 
     BOOT_MSGS = [
-        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 52 modules active"),
+        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 61 modules active"),
         (f"[{OR}]WARN[/]", "authorized targets only"),
-        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.3 — 52 modules active"),
+        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.5 — 61 modules active"),
     ]
     for tag, msg in BOOT_MSGS:
         time.sleep(0.08)
@@ -303,6 +304,33 @@ def dispatch(choice: str):
     elif choice in ("52", "frontscan", "react", "frontend", "tsx", "typescript"):
         from modules import frontscan; frontscan.run()
 
+    elif choice in ("53", "idor", "bola"):
+        from modules import idor; idor.run()
+
+    elif choice in ("54", "upload", "fileupload"):
+        from modules import upload; upload.run()
+
+    elif choice in ("55", "race", "racecond"):
+        from modules import race; race.run()
+
+    elif choice in ("56", "ldapi", "ldap"):
+        from modules import ldapi; ldapi.run()
+
+    elif choice in ("57", "emailsec", "email", "spf", "dmarc", "dkim"):
+        from modules import emailsec; emailsec.run()
+
+    elif choice in ("58", "urlspoof", "homograph", "typosquat"):
+        from modules import urlspoof; urlspoof.run()
+
+    elif choice in ("59", "mailspoof", "fromspoof", "spoofmail"):
+        from modules import mailspoof; mailspoof.run()
+
+    elif choice in ("60", "iplookup", "ipinfo", "geoip"):
+        from modules import iplookup; iplookup.run()
+
+    elif choice in ("61", "phonelookup", "phone", "phoneosint"):
+        from modules import phonelookup; phonelookup.run()
+
     elif choice in ("0", "exit", "quit", "q"):
         return False
 
@@ -381,6 +409,8 @@ def main():
             "proto":     "43",
             "breach":    "44",
             "shodan":    "45",
+            "track":     "46",
+            "ipgrab":    "46",
             "sqli":      "47",
             "sqlinject": "47",
             "cmdi":      "48",
@@ -401,6 +431,31 @@ def main():
             "frontend":  "52",
             "tsx":       "52",
             "typescript":"52",
+            "idor":      "53",
+            "bola":      "53",
+            "upload":    "54",
+            "fileupload":"54",
+            "race":      "55",
+            "racecond":  "55",
+            "ldapi":     "56",
+            "ldap":      "56",
+            "emailsec":    "57",
+            "email":       "57",
+            "spf":         "57",
+            "dmarc":       "57",
+            "dkim":        "57",
+            "urlspoof":    "58",
+            "homograph":   "58",
+            "typosquat":   "58",
+            "mailspoof":   "59",
+            "fromspoof":   "59",
+            "spoofmail":   "59",
+            "iplookup":    "60",
+            "ipinfo":      "60",
+            "geoip":       "60",
+            "phonelookup": "61",
+            "phone":       "61",
+            "phoneosint":  "61",
         }
         mod = args[0].lower()
         if mod in module_map:
@@ -447,7 +502,7 @@ def main():
 
 def _print_help():
     console.print(f"""
-[bold {G1}]MEOW-SEC[/]  v1.3  —  Cat-Themed Security Toolkit
+[bold {G1}]MEOW-SEC[/]  v1.5  —  Cat-Themed Security Toolkit
 [{DM}]by cat-project-hat // 2026[/]
 
 [{CY}]Usage:[/]
@@ -481,6 +536,11 @@ def _print_help():
   sqli      SQLi avancé (error/blind) cmdi      Command injection
   nosqli    NoSQL injection           ormi      ORM injection (HQL/LINQ)
   wpscan    WordPress vulns           frontscan React/TS/TSX scanner
+  idor      IDOR/BOLA tester          upload    File upload bypass
+  race      Race condition            ldap      LDAP injection
+  emailsec  SPF/DKIM/DMARC check     urlspoof  URL homograph/typosquat
+  mailspoof Email spoofing            iplookup  IP/domain intel (GeoIP)
+  phone     Phone number OSINT
 
 [{G1}]Proxy:[/]
   Run PROXYCAT first to download & validate proxies.

@@ -63,7 +63,7 @@ def show_banner():
 
     logo_text = Text()
     logo_text.append("◈ MEOW-SEC ", style=f"bold {G1}")
-    logo_text.append("v1.2", style=G2)
+    logo_text.append("v1.5", style=G2)
     logo_text.append("  ::  CAT HACKER TOOLKIT", style=DM)
 
     meta_text = Text()
@@ -128,6 +128,15 @@ def show_module_banner(module: str):
         "ormi":       ("ORMI",       "ORM Injection (HQL/JPQL/LINQ/Django/Rails)", RD),
         "wpscan":     ("WPSCAN",     "WordPress Vuln Scanner (plugins/CVEs/users)", RD),
         "frontscan":  ("FRONTSCAN",  "React/TS/TSX Vuln Scanner (static + remote)",  OR),
+        "idor":        ("IDOR",        "IDOR / BOLA Tester (path, param, JSON, REST)",        RD),
+        "upload":      ("UPLOAD",      "File Upload Bypass (ext, magic bytes, htaccess)",       RD),
+        "race":        ("RACE",        "Race Condition Tester (synchronized burst)",             OR),
+        "ldapi":       ("LDAPI",       "LDAP Injection (auth bypass, blind, user enum)",        RD),
+        "emailsec":    ("EMAILSEC",    "Email Security (SPF/DKIM/DMARC/spoof score)",           CY),
+        "urlspoof":    ("URLSPOOF",    "URL Spoofing (IDN homograph, typosquat, @ trick)",      RD),
+        "mailspoof":   ("MAILSPOOF",   "Email Spoofing (display name, reply-to, open relay)",   RD),
+        "iplookup":    ("IPLOOKUP",    "IP/Domain Intel (GeoIP, ASN, Shodan, AbuseIPDB)",       CY),
+        "phonelookup": ("PHONELOOKUP", "Phone Number Intel (country, carrier, OSINT links)",    CY),
     }
     name, desc, color = names.get(module.lower(), (module.upper(), "", G1))
     console.print(Rule(f"[bold {color}] {name} [/][{DM}] {desc} ", style=G2))
@@ -151,6 +160,8 @@ _MENU_RECON = [
     ("39", "SECRETSCAN","secrets scan"),
     ("44", "BREACH",    "breach check"),
     ("45", "SHODAN",    "IP recon"),
+    ("60", "IPLOOKUP",  "IP/domain intel"),
+    ("61", "PHONELOOKUP","phone OSINT"),
 ]
 _MENU_EXPLOIT = [
     ("5",  "HISS",    "SQLi/XSS+"),
@@ -158,6 +169,12 @@ _MENU_EXPLOIT = [
     ("48", "CMDI",    "cmd inject"),
     ("49", "NOSQLI",  "NoSQL inject"),
     ("50", "ORMI",    "ORM inject"),
+    ("53", "IDOR",    "IDOR/BOLA"),
+    ("54", "UPLOAD",  "file upload bypass"),
+    ("55", "RACE",    "race condition"),
+    ("56", "LDAPI",   "LDAP inject"),
+    ("58", "URLSPOOF","URL spoof/homograph"),
+    ("59", "MAILSPOOF","email spoof"),
     ("25", "CORS",    "CORS misconfig"),
     ("26", "LFI",     "LFI/RFI"),
     ("27", "FUZZ",    "param fuzz"),
@@ -178,6 +195,7 @@ _MENU_NET = [
     ("23", "SSLSCAN",  "SSL/TLS"),
     ("51", "WPSCAN",   "WP vulns"),
     ("52", "FRONTSCAN","React/TS scan"),
+    ("57", "EMAILSEC", "email security"),
     ("31", "BUCKET",  "cloud buckets"),
     ("32", "SPRAY",   "pwd spray"),
     ("33", "GRAPHQL", "GraphQL atk"),
@@ -249,7 +267,7 @@ def show_menu():
 
     console.print(Panel(
         t,
-        title=f"[bold {G1}]◈  MEOW-SEC  v1.1  ::  46 modules  ◈",
+        title=f"[bold {G1}]◈  MEOW-SEC  v1.5  ::  61 modules  ◈",
         border_style=G2,
         padding=(0, 1),
     ))

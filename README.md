@@ -6,351 +6,485 @@
  (_|   |_)
 ```
 
-# MEOW-SEC
+<div align="center">
 
-**By cat-project-hat // v1.3 // 2026**
+# 🐱 MEOW-SEC
 
-Toolkit de sécurité offensif Python 3 — interface TUI Rich — 52 modules — thème chat hacker
+### Cat-Themed Offensive Security Toolkit
 
-![Python](https://img.shields.io/badge/Python-3.10+-green?style=flat-square&logo=python&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue?style=flat-square)
-![Modules](https://img.shields.io/badge/Modules-52-brightgreen?style=flat-square)
-![License](https://img.shields.io/badge/License-Educational-red?style=flat-square)
-![Proxy](https://img.shields.io/badge/Proxy-Rotation-orange?style=flat-square)
-![CF Bypass](https://img.shields.io/badge/Cloudflare-Bypass-yellow?style=flat-square)
+**Python 3 · Rich TUI · 61 modules · No BS**
+
+[![Python](https://img.shields.io/badge/Python-3.10+-brightgreen?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=for-the-badge)](.)
+[![Modules](https://img.shields.io/badge/Modules-61-brightgreen?style=for-the-badge)](.)
+[![Version](https://img.shields.io/badge/Version-1.5-orange?style=for-the-badge)](.)
+[![License](https://img.shields.io/badge/License-Educational-red?style=for-the-badge)](.)
+[![Proxy](https://img.shields.io/badge/Proxy-Auto--Rotate-yellow?style=for-the-badge)](.)
+[![CF Bypass](https://img.shields.io/badge/Cloudflare-JA3%20Bypass-purple?style=for-the-badge)](.)
+
+*by cat-project-hat // 2026*
+
+</div>
 
 ---
 
-## ⚠️ Avertissement
+## ⚠️ Avertissement légal
 
-> **Ce projet est strictement éducatif.** Utilisation réservée aux CTF, tests d'intrusion autorisés et recherche en sécurité. L'utilisation sur des systèmes sans autorisation explicite est **illégale**. Les auteurs déclinent toute responsabilité en cas d'utilisation abusive.
+> **Ce projet est strictement éducatif.** Utilisation réservée aux **CTF**, **tests d'intrusion autorisés** et **recherche en sécurité**. L'utilisation sur des systèmes sans autorisation explicite écrite est **illégale** dans toutes les juridictions. Les auteurs déclinent toute responsabilité en cas d'utilisation abusive. **Use responsibly.**
 
 ---
 
-## 🗂️ Structure
+## 🚀 Quick Start
+
+```bash
+# 1. Clone / copier
+cd meow-sec
+
+# 2. Installer les dépendances
+pip install -r requirements.txt
+
+# 3. Lancer le menu interactif
+python meow.py
+
+# 4. Lancer un module directement
+python meow.py sqli
+python meow.py iplookup
+python meow.py urlspoof
+python meow.py phonelookup
+python meow.py wpscan
+```
+
+> **Les dépendances manquantes sont installées automatiquement** au premier lancement via `_ensure_deps()`. Aucune configuration requise.
+
+---
+
+## 📦 Requirements
+
+```
+rich>=13.7.0          ← TUI / terminal rendering
+colorama>=0.4.6       ← couleurs Windows
+requests>=2.31.0      ← HTTP client
+PySocks>=1.7.1        ← SOCKS4/5 proxies
+curl_cffi>=0.6.0      ← [optionnel] bypass Cloudflare JA3
+stem>=1.8.0           ← [optionnel] Tor circuit renewal (SPECTER)
+```
+
+---
+
+## 🗂️ Structure du projet
 
 ```
 meow-sec/
-├── meow.py              ← Point d'entrée — menu TUI interactif
-├── meow.bat             ← Lanceur Windows
+├── meow.py              ← Point d'entrée — menu TUI + dispatch CLI
+├── meow.bat             ← Lanceur Windows (double-clic)
 ├── requirements.txt
+│
 ├── core/
-│   ├── ui.py            ← Interface Rich (bannière, menu 4 colonnes, helpers)
-│   ├── cats.py          ← Art ASCII chats + animations
-│   ├── proxy_manager.py ← Rotation de proxies (download, validate, rotate — 35+ sources)
-│   └── tunnel.py        ← Tunnel manager centralisé (cloudflared / serveo / localhost.run / bore)
-├── data/
-│   ├── proxies.json     ← Pool de proxies validés
-│   ├── dstat_http.txt   ← (optionnel) proxies dstat.st téléchargés manuellement
-│   ├── dstat_socks4.txt
-│   └── dstat_socks5.txt
+│   ├── ui.py            ← Rich TUI (bannière, menu 4 colonnes, helpers ok/err/find)
+│   ├── cats.py          ← ASCII art chats + animations + typewriter
+│   ├── proxy_manager.py ← Rotation de proxies (35+ sources, validation parallèle)
+│   └── tunnel.py        ← Tunnel centralisé (cloudflared / serveo / localhost.run / bore)
+│
+├── data/                ← Résultats JSON + logs (auto-créé)
+│
 └── modules/
-    ├── claw.py          ← Port & service scanner
+    │
+    ── RECON ──────────────────────────────────────────────────────
+    ├── claw.py          ← Port & service scanner (TCP connect + banner grab)
     ├── purr.py          ← HTTP recon & header analyzer
-    ├── scratch.py       ← Directory brute force
-    ├── whisker.py       ← DNS / WHOIS / IP OSINT + AXFR + crt.sh
-    ├── hiss.py          ← SQLi / XSS / SSRF / CRLF / open redirect / host header
+    ├── scratch.py       ← Directory brute force (soft-404 detection)
+    ├── whisker.py       ← DNS / WHOIS / GeoIP + AXFR + crt.sh
     ├── catnap.py        ← Subdomain enumerator
-    ├── proxycat.py      ← Proxy manager (35+ sources, validation parallèle)
-    ├── ghost.py         ← Username OSINT
+    ├── ghost.py         ← Username OSINT (30+ plateformes)
     ├── osint_ext.py     ← Email / phone / dorks / IP OSINT étendu
-    ├── paws.py          ← Password generator
-    ├── mewhash.py       ← Hash tools + rule-based cracker
-    ├── codec.py         ← Encoder / decoder multi-format
-    ├── payload.py       ← Payload library
-    ├── netkit.py        ← Network utilities (ping, traceroute, CIDR scan /16)
-    ├── stress.py        ← Stress tester L3/L4/L7 (26 méthodes + SWARM + bypass CF)
-    ├── loot.py          ← Saved results viewer
-    ├── revshell.py      ← Reverse shell generator (21 types)
-    ├── waf.py           ← WAF / CDN fingerprinting
-    ├── jwtcat.py        ← JWT attacker (alg:none, RS256→HS256, HMAC brute)
-    ├── report.py        ← HTML report generator (dark matrix theme)
-    ├── brute.py         ← HTTP login brute force (form + Basic auth)
-    ├── cms.py           ← CMS fingerprinting (11 frameworks)
-    ├── sslscan.py       ← SSL/TLS deep scanner + crt.sh CT lookup
-    ├── phish.py         ← Phishing page + tunnel — 7 templates pixel-perfect
-    ├── phish_templates/ ← HTML séparés (Microsoft / Google / LinkedIn / Discord / Steam / Instagram / Generic)
-    ├── cors.py          ← CORS misconfiguration tester
-    ├── lfi.py           ← LFI / RFI tester (traversal, PHP wrappers)
-    ├── fuzz.py          ← Parameter & endpoint fuzzer
-    ├── cve.py           ← CVE lookup & version matcher (NVD + CIRCL)
     ├── harvest.py       ← Email harvester (crt.sh, archive.org, GitHub)
-    ├── takeover.py      ← Subdomain takeover checker (27 services, multi-source fallback)
-    ├── bucket.py        ← Cloud bucket finder (S3, GCS, Azure, DO)
-    ├── spray.py         ← Password spraying (HTTP form, Basic, NTLM)
-    ├── graphql.py       ← GraphQL security tester
-    ├── twofa.py         ← 2FA bypass tester
-    ├── smuggle.py       ← HTTP request smuggling tester (CL.TE / TE.CL / TE.TE)
-    ├── xxe.py           ← XML external entity injection tester (10 payloads)
-    ├── gitdump.py       ← Exposed git + sensitive file scanner (50+ paths)
-    ├── ssti.py          ← Server-side template injection tester
-    ├── secretscan.py    ← Secret / credential scanner in HTTP responses
-    ├── cache.py         ← Web cache poisoning & deception tester
-    ├── oauth.py         ← OAuth 2.0 / OIDC misconfiguration tester
-    ├── deseria.py       ← Deserialization vulnerability tester (PHP/Java/Pickle/Node)
-    ├── proto.py         ← Prototype pollution tester (Node.js)
-    ├── breach.py        ← Data breach checker (HIBP k-anonymity + LeakCheck)
-    ├── shodan_lite.py   ← Shodan-Lite IP recon (internetdb.shodan.io, no key)
-    ├── track.py         ← Chameleon IP Grabber — OGP bait + og:video Discord embed
-    ├── sqli.py          ← SQL injection avancé (error-based, blind, time-based, UNION, MariaDB)
-    ├── cmdi.py          ← OS command injection tester (verbose + blind time-based + headers)
-    ├── nosqli.py        ← NoSQL injection tester (MongoDB $ne/$gt/$regex/$where, Redis, CouchDB)
-    ├── ormi.py          ← ORM injection (TypeORM QB/orderBy/find, HQL, JPQL, LINQ, Django, Sequelize)
-    ├── wpscan.py        ← WordPress vuln scanner (CVEs, plugins, thèmes, user enum, XMLRPC)
-    └── frontscan.py     ← React/TypeScript/TSX scanner statique + remote bundle analysis
+    ├── waf.py           ← WAF / CDN fingerprinting (11 signatures)
+    ├── cve.py           ← CVE lookup & version matcher (NVD + CIRCL)
+    ├── takeover.py      ← Subdomain takeover (27 services, multi-source)
+    ├── gitdump.py       ← Git + 50+ fichiers sensibles exposés
+    ├── secretscan.py    ← Secret / credential scanner (15 patterns regex)
+    ├── breach.py        ← Data breach checker (HIBP k-anonymity)
+    ├── shodan_lite.py   ← Shodan-Lite (internetdb.shodan.io, sans clé)
+    ├── iplookup.py      ← IP/Domain intel (GeoIP · ASN · Shodan · AbuseIPDB · RDAP)
+    ├── phonelookup.py   ← Phone OSINT (pays · carrier · type · HLR · liens OSINT)
+    │
+    ── EXPLOIT ────────────────────────────────────────────────────
+    ├── hiss.py          ← SQLi / XSS / SSRF / CRLF / open redirect / host header
+    ├── sqli.py          ← SQL injection avancé (error-based / blind / time / UNION / MariaDB)
+    ├── cmdi.py          ← OS command injection (verbose + blind + headers)
+    ├── nosqli.py        ← NoSQL injection (MongoDB $ne/$gt/$regex/$where)
+    ├── ormi.py          ← ORM injection (TypeORM / HQL / JPQL / LINQ / Django / Sequelize)
+    ├── cors.py          ← CORS misconfiguration tester
+    ├── lfi.py           ← LFI / RFI (traversal, double-encode, PHP wrappers)
+    ├── fuzz.py          ← Parameter & endpoint fuzzer
+    ├── smuggle.py       ← HTTP request smuggling (CL.TE / TE.CL / TE.TE)
+    ├── xxe.py           ← XML External Entity (10 payloads, OOB, SSRF)
+    ├── ssti.py          ← Server-side template injection
+    ├── cache.py         ← Web cache poisoning & deception
+    ├── oauth.py         ← OAuth 2.0 / OIDC misconfiguration
+    ├── deseria.py       ← Deserialization (PHP / Java / Pickle / Node)
+    ├── proto.py         ← Prototype pollution (Node.js)
+    ├── idor.py          ← IDOR / BOLA (path / param / JSON / REST patterns)
+    ├── upload.py        ← File upload bypass (21 techniques)
+    ├── race.py          ← Race condition (threading.Barrier burst)
+    ├── ldapi.py         ← LDAP injection (auth bypass / blind / user enum)
+    │
+    ── RÉSEAU / INFRASTRUCTURE ────────────────────────────────────
+    ├── proxycat.py      ← Proxy manager (35+ sources, HTTP/SOCKS4/SOCKS5)
+    ├── netkit.py        ← Ping, traceroute, WHOIS, CIDR scan (/16)
+    ├── stress.py        ← Stress tester L3/L4/L7 (26 méthodes + SWARM)
+    ├── brute.py         ← HTTP login brute force (form + CSRF + Basic)
+    ├── cms.py           ← CMS fingerprinting (11 frameworks)
+    ├── sslscan.py       ← SSL/TLS deep scanner + CT lookup
+    ├── wpscan.py        ← WordPress scanner (CVEs / plugins / users / XMLRPC)
+    ├── frontscan.py     ← React/TypeScript/TSX scanner (statique + remote)
+    ├── bucket.py        ← Cloud bucket finder (S3 / GCS / Azure / DO)
+    ├── spray.py         ← Password spraying (HTTP form / Basic / NTLM)
+    ├── graphql.py       ← GraphQL tester (introspection / injection / mutations)
+    ├── twofa.py         ← 2FA bypass (OTP brute / reuse / skip)
+    │
+    ── PHISHING / RED TEAM ────────────────────────────────────────
+    ├── phish.py         ← Phishing page + tunnel (7 templates pixel-perfect)
+    ├── phish_templates/ ← HTML séparés (Microsoft / Google / LinkedIn / Discord / Steam / Instagram / Generic)
+    ├── track.py         ← IP Grabber (OGP bait / og:video Discord embed / GeoIP live)
+    ├── urlspoof.py      ← URL spoofing (IDN homograph / typosquat / subdomain / @ trick / bit-squat)
+    ├── mailspoof.py     ← Email spoofing (display name / reply-to / open relay / SMTP send)
+    │
+    ── EMAIL SECURITY ─────────────────────────────────────────────
+    ├── emailsec.py      ← SPF / DKIM / DMARC analysis + spoof risk score 0-10
+    │
+    ── UTILS ──────────────────────────────────────────────────────
+    ├── paws.py          ← Password generator (patterns, wordlists, PIN)
+    ├── mewhash.py       ← Hash tools (crack offline + rule-based + lookup)
+    ├── codec.py         ← Encoder/decoder multi-format
+    ├── payload.py       ← Payload library (XSS / SQLi / LFI / SSTI...)
+    ├── revshell.py      ← Reverse shell generator (21 types)
+    ├── jwtcat.py        ← JWT attacker (alg:none / RS256→HS256 / HMAC brute)
+    ├── loot.py          ← Saved results viewer (JSON browser)
+    └── report.py        ← HTML report generator (dark matrix theme)
 ```
 
 ---
 
-## ⚡ Modules
+## ⚡ Modules — Référence complète
+
+### RECON (Reconnaissance)
 
 | # | Module | Description |
 |---|--------|-------------|
 | 1 | **CLAW** | Port & service scanner — TCP connect, banner grab, service detection |
-| 2 | **PURR** | HTTP recon — headers, techs, security headers, path scan |
-| 3 | **SCRATCH** | Directory brute force — soft-404 detection, custom wordlist |
+| 2 | **PURR** | HTTP recon — headers, technologies, security headers, path scan |
+| 3 | **SCRATCH** | Directory brute force — soft-404 detection, wordlist custom |
 | 4 | **WHISKER** | DNS/WHOIS/GeoIP + Zone Transfer (AXFR) + crt.sh subdomains |
-| 5 | **HISS** | SQLi · XSS · SSRF · CRLF · Open Redirect · Host Header injection |
 | 6 | **CATNAP** | Subdomain enumerator — DNS + HTTP check |
-| 7 | **LOOT** | Saved results viewer — JSON browser |
-| 8 | **PROXYCAT** | Proxy manager — 35+ sources, validation parallèle, HTTP/SOCKS4/SOCKS5 |
 | 9 | **GHOST** | Username OSINT — vérification sur 30+ plateformes |
 | 10 | **OSINT+** | Email / phone / IP / Google dorks OSINT étendu |
+| 18 | **WAF** | WAF / CDN fingerprinting — 11 signatures (Cloudflare, Akamai, AWS WAF...) |
+| 28 | **CVE** | CVE lookup & version matcher — NVD API + CIRCL.lu |
+| 29 | **HARVEST** | Email harvester — crt.sh, archive.org, GitHub, scraping |
+| 30 | **TAKEOVER** | Subdomain takeover checker — 27 services, fallback multi-source |
+| 37 | **GITDUMP** | Exposed git repo + 50+ sensitive file scanner |
+| 39 | **SECRETSCAN** | Secret/credential scanner — AWS, GitHub, JWT, Stripe, 15 patterns |
+| 44 | **BREACH** | Data breach checker — HIBP k-anonymity (FREE), email lookup |
+| 45 | **SHODAN** | Shodan-Lite IP recon — internetdb.shodan.io (no key), CIDR scan |
+| 60 | **IPLOOKUP** | IP/Domain intelligence — GeoIP, ASN, Shodan, AbuseIPDB, RDAP WHOIS |
+| 61 | **PHONELOOKUP** | Phone number OSINT — pays, carrier, line type, HLR, liens OSINT |
+
+### EXPLOIT (Web & App)
+
+| # | Module | Description |
+|---|--------|-------------|
+| 5 | **HISS** | SQLi · XSS · SSRF · CRLF · Open Redirect · Host Header injection |
+| 47 | **SQLI** | SQL injection avancé — error-based, boolean-blind, time-based, UNION, MariaDB |
+| 48 | **CMDI** | OS command injection — verbose output, blind time-based, HTTP headers |
+| 49 | **NOSQLI** | NoSQL injection — MongoDB $ne/$gt/$regex/$where, array confusion, JSON bypass |
+| 50 | **ORMI** | ORM injection — TypeORM QB/orderBy/find, HQL, JPQL, LINQ, Django, Sequelize |
+| 25 | **CORS** | CORS misconfiguration tester — wildcard, null origin, credentials |
+| 26 | **LFI** | LFI / RFI tester — path traversal, double-encode, PHP wrappers |
+| 27 | **FUZZ** | Parameter & endpoint fuzzer — param discovery, path discovery, value fuzzing |
+| 35 | **SMUGGLE** | HTTP request smuggling — CL.TE / TE.CL / TE.TE (raw sockets) |
+| 36 | **XXE** | XML External Entity injection — 10 payloads, OOB, SSRF, error-based |
+| 38 | **SSTI** | Server-side template injection — 10 payloads, RCE hints |
+| 40 | **CACHE** | Web cache poisoning & deception — 10 unkeyed header tests |
+| 41 | **OAUTH** | OAuth 2.0 / OIDC misconfiguration — open redirect, state CSRF, PKCE |
+| 42 | **DESERIA** | Deserialization tester — PHP / Java / Python pickle / Node.js |
+| 43 | **PROTO** | Prototype pollution tester — query, JSON, form, path injection |
+| 53 | **IDOR** | IDOR / BOLA — path swap, param swap, JSON field, REST pattern discovery |
+| 54 | **UPLOAD** | File upload bypass — 21 techniques (double ext, magic bytes, .htaccess, JSP...) |
+| 55 | **RACE** | Race condition — synchronized burst (threading.Barrier), double-spend detection |
+| 56 | **LDAPI** | LDAP injection — 15 auth bypass payloads, blind, user enumeration |
+
+### RÉSEAU / INFRASTRUCTURE
+
+| # | Module | Description |
+|---|--------|-------------|
+| 8 | **PROXYCAT** | Proxy manager — 35+ sources, validation parallèle, HTTP/SOCKS4/SOCKS5 |
+| 15 | **NETKIT** | Network utilities — ping, traceroute, WHOIS, CIDR scan (jusqu'à /16) |
+| 16 | **STRESS** | Stress tester — 26 méthodes L7/L4/L3 + SWARM + bypass Cloudflare + SPECTER/WRAITH |
+| 21 | **BRUTE** | HTTP brute force — form auto-detect + CSRF, Basic auth, proxy rotation |
+| 22 | **CMS** | CMS fingerprinting — WordPress, Drupal, Joomla, Laravel, Django, Flask... |
+| 23 | **SSLSCAN** | SSL/TLS deep scanner — protocols, ciphers, cert, HTTP security headers |
+| 31 | **BUCKET** | Cloud bucket finder — AWS S3, GCS, Azure Blob, DigitalOcean Spaces |
+| 32 | **SPRAY** | Password spraying — HTTP form, Basic auth, NTLM |
+| 33 | **GRAPHQL** | GraphQL security tester — introspection, injection, mutations |
+| 34 | **2FA** | 2FA bypass tester — OTP brute, reuse, response manip, backup codes, skip |
+| 51 | **WPSCAN** | WordPress vuln scanner — version + CVEs, plugins, thèmes, user enum, XMLRPC |
+| 52 | **FRONTSCAN** | React/TypeScript/TSX — analyse statique .ts/.tsx + scan remote bundle/sourcemaps |
+
+### PHISHING / RED TEAM
+
+| # | Module | Description |
+|---|--------|-------------|
+| 24 | **PHISH** | Phishing page + tunnel — 7 templates pixel-perfect + cloudflared auto-dl |
+| 46 | **TRACK** | Chameleon IP Grabber — OGP bait + og:video Discord embed + GeoIP live |
+| 58 | **URLSPOOF** | URL spoofing — IDN homograph (Cyrillique/Grec), typosquatting, subdomain tricks, @ trick, data:URI, bit-squatting |
+| 59 | **MAILSPOOF** | Email spoofing — display name, reply-to hijack, lookalike domain, open relay test, SMTP send |
+
+### EMAIL SECURITY
+
+| # | Module | Description |
+|---|--------|-------------|
+| 57 | **EMAILSEC** | SPF / DKIM / DMARC / BIMI analysis + spoof risk score 0–10 |
+
+### UTILS
+
+| # | Module | Description |
+|---|--------|-------------|
 | 11 | **PAWS** | Password generator — patterns, wordlists, PIN |
 | 12 | **MEWHASH** | Hash tools — crack offline + rule-based (l33t, mutations) + lookup sans API |
 | 13 | **CODEC** | Encoder / decoder — Base64/32/16, URL, HTML, ROT13, hex, XOR... |
 | 14 | **PAYLOAD** | Payload library — XSS, SQLi, path traversal, LFI, SSTI... |
-| 15 | **NETKIT** | Network utilities — ping, traceroute, WHOIS, CIDR scan (jusqu'à /16) |
-| 16 | **STRESS** | Stress tester — 26 méthodes L7/L4/L3 + SWARM + bypass Cloudflare + SPECTER/WRAITH auto-install |
 | 17 | **REVSHELL** | Reverse shell generator — 21 types (Bash, Python, PHP, PowerShell, Netcat...) |
-| 18 | **WAF** | WAF / CDN fingerprinting — 11 signatures (Cloudflare, Akamai, AWS WAF...) |
 | 19 | **JWTCAT** | JWT attacker — alg:none, RS256→HS256 confusion, HMAC brute force, forge |
-| 20 | **REPORT** | HTML report generator — agrège tous les scans, dark matrix theme |
-| 21 | **BRUTE** | HTTP brute force — form auto-detect + CSRF, Basic auth, proxy rotation |
-| 22 | **CMS** | CMS fingerprinting — WordPress, Drupal, Joomla, Laravel, Django, Flask... |
-| 23 | **SSLSCAN** | SSL/TLS deep scanner — protocols, ciphers, cert, HTTP security headers |
-| 24 | **PHISH** | Phishing page + tunnel — 7 templates pixel-perfect + cloudflared auto-dl |
-| 25 | **CORS** | CORS misconfiguration tester — wildcard, null origin, credentials reflection |
-| 26 | **LFI** | LFI / RFI tester — path traversal, double-encode, PHP wrappers |
-| 27 | **FUZZ** | Parameter & endpoint fuzzer — param discovery, path discovery, value fuzzing |
-| 28 | **CVE** | CVE lookup & version matcher — NVD API + CIRCL.lu, auto-fingerprint cible |
-| 29 | **HARVEST** | Email harvester — crt.sh, archive.org, GitHub, scraping, pattern generation |
-| 30 | **TAKEOVER** | Subdomain takeover checker — 27 services, fallback multi-source (crt.sh → HackerTarget → riddler) |
-| 31 | **BUCKET** | Cloud bucket finder — AWS S3, GCS, Azure Blob, DigitalOcean Spaces |
-| 32 | **SPRAY** | Password spraying — HTTP form, Basic auth, NTLM (auth requise) |
-| 33 | **GRAPHQL** | GraphQL security tester — introspection, injection, mutations |
-| 34 | **2FA** | 2FA bypass tester — OTP brute, reuse, response manip, backup codes, skip |
-| 35 | **SMUGGLE** | HTTP request smuggling tester — CL.TE / TE.CL / TE.TE (raw sockets) |
-| 36 | **XXE** | XML External Entity injection tester — 10 payloads, OOB, SSRF, error-based |
-| 37 | **GITDUMP** | Exposed git repo + 50+ sensitive file scanner (keys, .env, backups) |
-| 38 | **SSTI** | Server-side template injection — 10 detection payloads, RCE hints |
-| 39 | **SECRETSCAN** | Secret/credential scanner in responses — AWS, GitHub, JWT, Stripe, 15 patterns |
-| 40 | **CACHE** | Web cache poisoning & deception tester — 10 unkeyed header tests |
-| 41 | **OAUTH** | OAuth 2.0 / OIDC misconfiguration — open redirect, state, PKCE, implicit flow |
-| 42 | **DESERIA** | Deserialization vulnerability tester — PHP / Java / Python pickle / Node.js |
-| 43 | **PROTO** | Prototype pollution tester — query, JSON, form, path injection vectors |
-| 44 | **BREACH** | Data breach checker — HIBP k-anonymity (FREE), email lookup, breach list |
-| 45 | **SHODAN** | Shodan-Lite IP recon — internetdb.shodan.io (no key), CIDR scan, crt.sh |
-| 46 | **TRACK** | Chameleon IP Grabber — OGP bait + og:video Discord embed + GeoIP live |
-| 47 | **SQLI** | SQL injection avancé — error-based, boolean-blind, time-based, UNION, MariaDB |
-| 48 | **CMDI** | OS command injection — verbose output, blind time-based, HTTP header injection |
-| 49 | **NOSQLI** | NoSQL injection — MongoDB $ne/$gt/$regex/$where, array injection, JSON auth bypass |
-| 50 | **ORMI** | ORM injection — TypeORM QueryBuilder/orderBy/find bypass, HQL, JPQL, LINQ, Django, Sequelize |
-| 51 | **WPSCAN** | WordPress scanner — version + CVEs, plugins, thèmes, user enum, XMLRPC, fichiers sensibles |
-| 52 | **FRONTSCAN** | React/TypeScript/TSX — analyse statique .ts/.tsx + scan remote bundle/sourcemaps |
+| 7 | **LOOT** | Saved results viewer — JSON browser |
+| 20 | **REPORT** | HTML report generator — dark matrix theme, toutes sections |
 
 ---
 
-## 🔍 Détail des modules injection/exploit
-
-### Module 35 — SMUGGLE (HTTP Request Smuggling)
-Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis :
-- **CL.TE** : Content-Length inclut des octets après le 0-chunk TE — mesure le delta de temps
-- **TE.CL** : Transfer-Encoding chunked 1 octet, CL=3 — détecte 400/500 ou hang
-- **TE.TE** : 5 variantes d'obfuscation du header Transfer-Encoding
-
-### Module 36 — XXE (XML External Entity)
-10 payloads testés avec `application/xml` et `text/xml` :
-- Lecture de fichiers locaux (`/etc/passwd`, `win.ini`)
-- SSRF vers les métadonnées AWS (169.254.169.254) et localhost:22
-- Blind OOB avec callback URL configurable
-- Error-based, CDATA exfil, SVG XXE, PHP `expect://`, SOAP XXE
-
-### Module 37 — GITDUMP (Git & Sensitive File Scanner)
-- Phase 1 : 50+ chemins sensibles (`.git/`, `.env`, clés privées, backups, configs)
-- Phase 2 : si `.git/HEAD` trouvé → télécharge les internals git, parse les URLs de remote
-- Risque HIGH : fichiers git, `.env`, credentials, clés privées
-
-### Module 38 — SSTI (Template Injection)
-10 payloads de détection testés via GET, POST form, POST JSON, segment de path :
-- Détection d'engine par la valeur retournée (49, 7777777, A...)
-- Suggestions de payloads RCE pour Jinja2, Twig, FreeMarker, Mako
-
-### Module 39 — SECRETSCAN (Secret Scanner)
-15 patterns regex (AWS, GitHub, Google, JWT, clé privée, DB URL, Slack, Stripe...) :
-- Mode single URL ou crawl (profondeur 2, max 50 pages)
-- Tronque les valeurs trouvées à 40 chars pour éviter l'exposition
-
-### Module 40 — CACHE (Cache Poisoning)
-- 10 tests d'headers non-keyés (X-Forwarded-Host, X-Original-URL, Fat GET...)
-- Compare status + taille de réponse avec le baseline
-- Test cache deception : extensions statiques fake sur des chemins protégés
-
-### Module 41 — OAUTH (OAuth 2.0 Misconfiguration)
-- Découverte automatique (`.well-known/openid-configuration`)
-- 7 vérifications : open redirect_uri, state CSRF, implicit flow, PKCE, client secret en JS, token endpoint GET
-- Scan du source de la page pour `client_secret` / `clientSecret`
-
-### Module 42 — DESERIA (Deserialization)
-- **PHP** : payloads `O:8:"stdClass":0:{}`, détection via erreurs `__wakeup`/`__destruct`
-- **Java** : magic bytes `AC ED 00 05`, détection ClassNotFoundException
-- **Python pickle** : magic `\x80\x04`, détection erreurs unpickling
-- **Node.js** : `_$$ND_FUNC$$_` node-serialize RCE pattern
-
-### Module 43 — PROTO (Prototype Pollution)
-- Injection via query string (`__proto__[testprop]=marker`)
-- Injection via JSON body (`{"__proto__": {...}}`)
-- Injection via form POST et segment de chemin URL
-- Détection si le marker `meow_polluted_7749` apparaît dans la réponse
-
-### Module 44 — BREACH (Data Breach Checker)
-- **Mode 1** : check mot de passe par k-anonymité HIBP (SHA1, envoie seulement 5 chars, **GRATUIT**)
-- **Mode 2** : check email via HIBP v3 (clé API requise) + LeakCheck.io (free tier)
-- **Mode 3** : liste toutes les brèches connues, filtrable par domaine
-
-### Module 45 — SHODAN (Shodan-Lite)
-- Utilise `https://internetdb.shodan.io/{ip}` (API publique, sans clé)
-- Affiche : ports ouverts, CPEs, hostnames, tags (honeypot/VPN/CDN), CVE IDs
-- Scan CIDR /24 (256 IPs) en parallèle
-- Lookup de domaine + résolution DNS + crt.sh pour les sous-domaines via CT
-
-### Module 47 — SQLI (SQL Injection avancé)
-Tester complet multi-DB avec 4 méthodes d'injection :
-- **Error-based** : 7 bases détectées (MySQL, MariaDB, PostgreSQL, MSSQL, Oracle, SQLite, Generic) — signatures d'erreur spécifiques par DB
-- **Boolean-blind** : 2 payloads `AND 1=1` / `AND 1=2` — comparaison taille/status de réponse
-- **Time-based blind** : `SLEEP()`, `WAITFOR DELAY`, `pg_sleep()`, `DBMS_PIPE.RECEIVE_MESSAGE()` — seuil 3× la baseline
-- **UNION-based** : détection automatique du nombre de colonnes (jusqu'à 20), injection de marqueur `MEOW_`
-- **MariaDB spécifique** : signatures `er_parse_error`, `com.mariadb.jdbc`, extraction via `information_schema` incluant le champ `engine`
-- **Extraction** : version, user courant, base courante, liste des tables (par DB détectée)
-- Méthodes testées : GET params, POST form, POST JSON, segment de chemin
-
-### Module 48 — CMDI (OS Command Injection)
-- **Verbose** : marqueurs Unix (`uid=`, `root`, `www-data`) + Windows (`NT AUTHORITY`, `system32`)
-- **Blind time-based** : `sleep 4` (Linux) et `ping -n 5 127.0.0.1` (Windows) — mesure du delta de temps
-- **Header injection** : User-Agent, Referer, X-Forwarded-For, X-Real-IP
-- Payloads : 16 vecteurs Unix (`id`, `whoami`, backtick, `$(cmd)`, pipe...) + 8 vecteurs Windows
-- Méthodes : GET, POST form, POST JSON, HTTP headers
-
-### Module 49 — NOSQLI (NoSQL Injection)
-- **MongoDB operator injection** (GET params) : `$ne`, `$gt`, `$regex`, `$where`, `$nin` — détecte les réponses anormalement longues
-- **JSON auth bypass** : `{"$ne": None}`, `{"$gt": ""}`, `{"$regex": ".*"}` — envoi en `Content-Type: application/json`
-- **Array type confusion** : passage de `param=val` à `param[]=val` — confusion de type BSON
-- **`$where` JS injection** : `{"$where": "sleep(4000)"}` — détection time-based
-- **Redis/CouchDB** : erreurs de syntaxe spécifiques (`WRONGTYPE`, `ERR syntax`, CouchDB `bad_request`)
-- Signatures d'erreur par base : MongoDB, Redis, CouchDB
-
-### Module 50 — ORMI (ORM Injection)
-Frameworks supportés : **TypeORM**, Hibernate/HQL, JPQL, LINQ, Django ORM, Eloquent/Laravel, ActiveRecord/Rails, Sequelize (Node.js)
-
-#### TypeORM (spécifique)
-- **QueryBuilder string concat** : 10 payloads `.where()` — `' OR '1'='1'-- -`, UNION SELECT, `pg_sleep()`, `SLEEP()`, `WAITFOR DELAY`
-- **`.orderBy(userInput)` injection** : ORDER BY manipulation — `id ASC; DROP TABLE users--`, CASE WHEN, FIELD()
-- **`find()` operator bypass** : objets FindOperator internes `{"_type": "moreThan", "_value": 0}`, `{"_type": "like", "_value": "%"}`, `{"_type": "raw", "_value": "1=1"}` + style Prisma `{"gt": 0}`
-- **`dataSource.query(\`${input}\`)` raw query** : mêmes payloads que QB
-- Signatures d'erreur TypeORM : `queryfailederror`, `entitynotfounderror`, `could not find metadata for`, `column was not found in`
-
-#### Autres frameworks
-- **HQL/JPQL** : `' OR '1'='1`, injections `FROM User`, `UNION SELECT`
-- **LINQ** : `null reference`, `sequence contains`, detection erreurs .NET
-- **Django ORM** : `OperationalError`, `ProgrammingError`, payloads `__icontains`, `__regex`
-- **Eloquent** : `QueryException`, `SQLSTATE` Laravel
-- **ActiveRecord** : `ActiveRecord::StatementInvalid`, payloads Ruby
-- **Sequelize** : `SequelizeDatabaseError`, payloads Node.js
-
-### Module 51 — WPSCAN (WordPress Vulnerability Scanner)
-- **Détection de version** : `readme.html`, meta generator, RSS feed, paramètre `ver=` des assets
-- **CVE par version** : base de données intégrée WordPress 4.x → 6.4+ (CVE-2023-5561, CVE-2022-21661, CVE-2022-21662...)
-- **Plugins vulnérables** : 20 plugins — contact-form-7, woocommerce, elementor, wp-file-manager, ultimate-member, revslider, duplicator, timthumb...
-- **Thèmes vulnérables** : 5 thèmes — divi, avada, enfold, newspaper
-- **Énumération utilisateurs** : REST API `/wp-json/wp/v2/users` + redirect `?author=1..5`
-- **XML-RPC** : détection `xmlrpc.php` + `system.listMethods` (amplification brute force)
-- **Fichiers sensibles** : 25 chemins — `wp-config.php`, `.env`, `debug.log`, `phpinfo.php`, backups...
-- **En-têtes de sécurité** : X-Frame-Options, CSP, HSTS, X-Content-Type-Options
-- **WP-Cron public** : détection `wp-cron.php` accessible
-- Modes : full / version+CVEs / plugins+thèmes / énumération users / fichiers+headers
-
-### Module 52 — FRONTSCAN (React / TypeScript / TSX Scanner)
-
-#### Mode 1 — Analyse statique (projet local)
-Scanne tous les fichiers `.ts`, `.tsx`, `.js`, `.jsx` (hors `node_modules`, `dist`, `.next`...) :
-
-| Catégorie | Patterns détectés |
-|-----------|-------------------|
-| XSS | `dangerouslySetInnerHTML`, `innerHTML =`, `document.write`, `eval()` |
-| Injections TypeORM | QueryBuilder concat, `.orderBy(userInput)`, `dataSource.query(\`${}\`)`, `find({where: req.body})`, `.select([userInput])`, `.where(':param')` sans binding |
-| Secrets hardcodés | `apiKey`, `secretKey`, `password =`, `token =`, clés AWS/Stripe/GitHub |
-| Stockage sensible | `localStorage`/`sessionStorage` avec `password`, `token`, `secret` |
-| Redirections ouvertes | `window.location = req.params`, navigation vers `userInput` |
-| Prototype pollution | `Object.assign({}, userInput)`, spread `...req.body` sur objets sensibles |
-| CORS wildcard | `Access-Control-Allow-Origin: *` dans fetch/axios |
-| Requêtes non sanitisées | `fetch(userInput)`, `axios.get(params.url)` |
-
-#### Mode 2 — Scan remote (app déployée)
-- Découverte des bundles JS depuis `index.html`
-- Détection **source maps exposées** (`.js.map`) — extraction de code source
-- Extraction de **secrets dans les bundles** (AWS key, GitHub token, JWT secret, Stripe key)
-- **GraphQL introspection** activée — dump du schéma complet
-- **`window.__INITIAL_STATE__`** — fuite de données serveur dans le HTML
-- 18 chemins de bundles testés automatiquement
-
----
-
-## 🐱 Menu
+## 🐱 Menu interactif
 
 ```
-╭─────────────── ◈  MEOW-SEC  v1.3  ::  52 modules  ◈ ─────────────────╮
+╭──────────────── ◈  MEOW-SEC  v1.5  ::  61 modules  ◈ ────────────────╮
 │  /\_/\           /\_/\           /\_/\           /\_/\                │
 │ ( o.o )         ( >.< )         ( ^.^ )         ( o_o )               │
 │   > w <           > ~ <           > v <           > x <               │
-│ ─ RECON ─       ─EXPLOIT─       ─NETWORK─       ─ UTILS ─             │
+│ ─ RECON ─       ─EXPLOIT─       ─RÉSEAU─        ─ UTILS ─             │
 │ ──────────────  ──────────────  ──────────────  ──────────────        │
 │  [ 1] CLAW       [ 5] HISS       [ 8] PROXYCAT   [11] PAWS            │
-│  [ 2] PURR       [25] CORS       [15] NETKIT     [12] MEWHASH          │
-│  [ 3] SCRATCH    [26] LFI        [16] STRESS     [13] CODEC            │
-│  [ 4] WHISKER    [27] FUZZ       [21] BRUTE      [14] PAYLOAD          │
-│  [ 6] CATNAP     [35] SMUGGLE    [22] CMS        [17] REVSHELL         │
-│  [ 9] GHOST      [36] XXE        [23] SSLSCAN    [19] JWTCAT           │
-│  [10] OSINT+     [38] SSTI       [31] BUCKET     [ 7] LOOT             │
-│  [18] WAF        [40] CACHE      [32] SPRAY      [20] REPORT           │
-│  [28] CVE        [41] OAUTH      [33] GRAPHQL    [24] PHISH            │
-│  [29] HARVEST    [42] DESERIA    [34] 2FA        [46] TRACK            │
-│  [30] TAKEOVER   [43] PROTO      [51] WPSCAN     [ 0] EXIT             │
-│  [37] GITDUMP    [47] SQLI       [52] FRONTSCAN                        │
-│  [39] SECRETSCAN [48] CMDI                                             │
-│  [44] BREACH     [49] NOSQLI                                           │
-│  [45] SHODAN     [50] ORMI                                             │
+│  [ 2] PURR       [47] SQLI       [15] NETKIT     [12] MEWHASH          │
+│  [ 3] SCRATCH    [48] CMDI       [16] STRESS     [13] CODEC            │
+│  [ 4] WHISKER    [49] NOSQLI     [21] BRUTE      [14] PAYLOAD          │
+│  [ 6] CATNAP     [50] ORMI       [22] CMS        [17] REVSHELL         │
+│  [ 9] GHOST      [53] IDOR       [23] SSLSCAN    [19] JWTCAT           │
+│  [10] OSINT+     [54] UPLOAD     [31] BUCKET     [ 7] LOOT             │
+│  [18] WAF        [55] RACE       [32] SPRAY      [20] REPORT           │
+│  [28] CVE        [56] LDAPI      [33] GRAPHQL    [24] PHISH            │
+│  [29] HARVEST    [58] URLSPOOF   [34] 2FA        [46] TRACK            │
+│  [30] TAKEOVER   [59] MAILSPOOF  [51] WPSCAN     [ 0] EXIT             │
+│  [37] GITDUMP    [25] CORS       [52] FRONTSCAN                        │
+│  [39] SECRETSCAN [26] LFI        [57] EMAILSEC                        │
+│  [44] BREACH     [35] SMUGGLE    [60] IPLOOKUP                        │
+│  [45] SHODAN     [36] XXE        [61] PHONELOOKUP                     │
+│  [60] IPLOOKUP   [40] CACHE                                            │
+│  [61] PHONELOOKUP[41] OAUTH                                            │
 ╰────────────────────────────────────────────────────────────────────────╯
 ```
 
 ---
 
+## 🔎 Détail des modules — Deep Dive
+
+### RECON
+
+#### Module 60 — IPLOOKUP (IP / Domain Intelligence)
+Lookup multi-sources en parallèle, sans clé API requise :
+- **GeoIP** : pays, région, ville, coordonnées, timezone via `ip-api.com` + `ipinfo.io`
+- **ASN / ISP** : numéro AS, organisation, provider, CIDR via `bgp.tools`
+- **Shodan InternetDB** : ports ouverts, CPEs, hostnames, tags (honeypot/VPN/CDN), CVEs
+- **AbuseIPDB** : score d'abus 0–100, nombre de signalements, flag Tor
+- **RDAP WHOIS** : ARIN / RIPE (selon région) — handle, organisation, country
+- **Reverse DNS** : résolution PTR socket
+- **Lien Google Maps** automatique avec coordonnées GPS
+- **Modes** : IP/domaine unique · scan CIDR (jusqu'à /24) · bulk depuis fichier
+
+#### Module 61 — PHONELOOKUP (Phone Number OSINT)
+- **Normalisation E.164** : accepte tous formats (`0612345678`, `+33612345678`, `0033612345678`)
+- **Table de pays** : 60+ préfixes nationaux avec carriers connus par pays
+- **Type de ligne** : heuristiques par pays (mobile/landline/toll-free/premium)
+  - France : `06`/`07` = Mobile, `08` = Spécial, `01`-`05` = Fixe
+  - UK : `07` = Mobile, `080` = Gratuit, `09` = Premium
+  - Allemagne : `015x/016x/017x` = Mobile
+  - Inde : `6`-`9` = Mobile
+  - Chine : `13x-19x` = Mobile
+- **HLR Lookup** (free tier) : réseau actuel, numéro porté, opérateur
+- **numverify** (free tier) : carrier, type, location
+- **10 liens OSINT** : Truecaller, Sync.me, SpyDialer, WhitePages, NumLookup, WhatsApp, Telegram...
+- **Liens spam check** : ShouldIAnswer, WhocallsMe
+
+---
+
+### PHISHING / RED TEAM
+
+#### Module 58 — URLSPOOF (URL Spoofing & Lookalike Domain)
+Génère toutes les variantes d'un domaine pour phishing / awareness training :
+
+| Technique | Exemple | Risque |
+|-----------|---------|--------|
+| **IDN Homograph** | `pаypal.com` (Cyrillique а) | CRITICAL |
+| **IDN Homograph (Grec)** | `payρal.com` (ρ = rho) | CRITICAL |
+| **Typosquatting — missing** | `paypl.com` | HIGH |
+| **Typosquatting — double** | `payypal.com` | HIGH |
+| **Typosquatting — keyboard** | `oaypal.com` (p→o) | HIGH |
+| **TLD swap** | `paypal.co`, `paypal.io` | MEDIUM |
+| **Subdomain trick** | `paypal.login-secure.com` | CRITICAL |
+| **Brand-keyword combo** | `paypal-secure.com` | HIGH |
+| **@ trick (RFC3986)** | `https://paypal.com@evil.com` | HIGH |
+| **data: URI** | `data:text/html;base64,...` | MEDIUM |
+| **Open redirect chain** | `https://real.com/redirect?url=evil` | CRITICAL |
+| **Bit-squatting** | `paypal.com` (bit flip) | MEDIUM |
+
+- **Vérification DNS** automatique : domaines FREE (non enregistrés) vs TAKEN
+- Export JSON complet
+
+#### Module 59 — MAILSPOOF (Email Spoofing)
+- **Vérification spoofabilité** : SPF + DMARC check automatique — verdict SPOOFABLE / PROTECTED
+- **8 techniques générées** :
+  - Display name spoof (`"PayPal Security" <noreply@evil.com>`)
+  - Reply-To hijack (From légitime, réponse vers attaquant)
+  - Subaddressing (`security+paypal@gmail.com`)
+  - Unicode dans le display name (Cyrillique Ѕ → S)
+  - Lookalike domain (o→0 substitution)
+  - Cousin domain (TLD swap `.co`)
+  - IDN / Punycode
+  - Direct From spoof si SPF `~all` ou DMARC `p=none`
+- **Test open relay** : SMTP port 25, MAIL FROM + RCPT TO — détecte serveurs relais ouverts
+- **Envoi SMTP** configurable : From forgé, Reply-To attaquant, body HTML, STARTTLS/SSL
+
+---
+
+### INJECTION WEB
+
+#### Module 47 — SQLI (SQL Injection Avancé)
+4 méthodes, 7 bases détectées :
+
+| Méthode | Description |
+|---------|-------------|
+| **Error-based** | Signatures d'erreur par DB (MySQL, MariaDB, PostgreSQL, MSSQL, Oracle, SQLite) |
+| **Boolean-blind** | AND 1=1 vs AND 1=2 — comparaison taille + status |
+| **Time-based blind** | SLEEP/WAITFOR/pg_sleep — seuil 3× baseline |
+| **UNION-based** | Détection automatique du nombre de colonnes (jusqu'à 20) |
+
+**MariaDB** spécifique : `er_parse_error`, `com.mariadb.jdbc` — extraction avec champ `engine` depuis `information_schema`
+
+#### Module 48 — CMDI (OS Command Injection)
+- **Verbose** : marqueurs Unix (`uid=`, `root`, `www-data`) + Windows (`NT AUTHORITY`, `system32`)
+- **Blind time-based** : `sleep 4` Linux / `ping -n 5 127.0.0.1` Windows
+- **Header injection** : User-Agent, Referer, X-Forwarded-For, X-Real-IP
+
+#### Module 49 — NOSQLI (NoSQL Injection)
+- MongoDB `$ne/$gt/$regex/$where/$nin` (GET params et JSON body)
+- Array type confusion (`param=val` → `param[]=val`)
+- `$where` JavaScript injection + blind timing
+- Redis / CouchDB error signatures
+
+#### Module 50 — ORMI (ORM Injection)
+Supporte : **TypeORM** · Hibernate/HQL · JPQL · LINQ · Django ORM · Eloquent · ActiveRecord · Sequelize
+
+**TypeORM spécifique :**
+- `QueryBuilder.where()` string concat — 10 payloads ciblés
+- `.orderBy(userInput)` ORDER BY injection
+- `find({where: req.body})` operator bypass avec FindOperator internals `{"_type": "moreThan"}`
+- `dataSource.query(\`${input}\`)` raw query injection
+
+#### Module 53 — IDOR (Insecure Direct Object Reference)
+- **Path swap** : ±5 IDs voisins, UUID variants, termes communs (`admin`, `null`, `root`)
+- **Param swap** : même logique sur query string
+- **JSON body** : swaps sur champ configurable (POST REST API)
+- **BOLA patterns** : 15 routes REST standard auto-testées
+
+#### Module 54 — UPLOAD (File Upload Bypass)
+21 techniques dont :
+- Double extension `.php.jpg`, `.jpg.php`, `.php5`, `.phtml`, case mixing `.pHp`
+- MIME spoof : shell PHP envoyé en `image/jpeg`/`image/png`
+- Magic bytes polyglot : `GIF89a` + shell PHP
+- `.htaccess` : `AddType application/x-httpd-php .jpg`
+- `web.config` IIS
+- Path traversal filename : `../shell.php`
+- SVG/HTML XSS si servi directement
+- JSP et ASPX shells
+- Null byte `%00`
+- Vérification d'exécution automatique sur 8+ chemins
+
+#### Module 55 — RACE (Race Condition)
+- `threading.Barrier(N)` — tous les threads tirent à la même milliseconde
+- Pré-warm TCP : connexion préalable pour éliminer latence TLS
+- Scénarios : coupon, vote, gift card, password reset, achat, 2FA, custom
+- Détection : variance de taille, mix 200/409, succès universel
+
+#### Module 56 — LDAPI (LDAP Injection)
+- 15 payloads auth bypass : `*)(uid=*`, `admin)(&`, `*))%00`, `\2a` hex, nested OR/NOT
+- Blind : comparaison status/taille
+- Enum : 14 usernames communs avec wildcard password
+
+---
+
+### WORDPRESS & FRONTEND
+
+#### Module 51 — WPSCAN (WordPress Scanner)
+- **Version** : `readme.html`, meta generator, RSS, `?ver=` assets
+- **CVEs intégrés** : WP 4.x → 6.4+ avec CVE-ID, sévérité, description
+- **20 plugins vulnérables** : contact-form-7, woocommerce, elementor, wp-file-manager, revslider, duplicator, timthumb...
+- **5 thèmes vulnérables** : divi, avada, enfold, newspaper
+- **User enum** : REST API `/wp-json/wp/v2/users` + redirect `?author=1..5`
+- **XML-RPC** : détection + `system.listMethods` (amplification)
+- **25 fichiers sensibles** : `wp-config.php`, `.env`, `debug.log`, `phpinfo.php`...
+
+#### Module 52 — FRONTSCAN (React / TypeScript / TSX)
+**Analyse statique** (fichiers `.ts/.tsx/.js/.jsx`) — 40+ patterns :
+
+| Catégorie | Patterns |
+|-----------|---------|
+| XSS | `dangerouslySetInnerHTML`, `innerHTML =`, `document.write`, `eval()` |
+| TypeORM inject | QueryBuilder concat, `.orderBy(req.)`, `dataSource.query(\`${}\`)`, `find({where: req.body})` |
+| Secrets | `apiKey`, `secretKey`, `password =`, clés AWS/Stripe/GitHub hardcodées |
+| Stockage sensible | `localStorage`/`sessionStorage` avec `password`/`token`/`secret` |
+| Open redirect | `window.location = params.`, navigation vers user input |
+| Prototype pollution | `Object.assign({}, userInput)`, spread `...req.body` |
+
+**Scan remote** : source maps exposées, secrets dans bundles, GraphQL introspection, `window.__INITIAL_STATE__`
+
+---
+
+### EMAIL SECURITY
+
+#### Module 57 — EMAILSEC (Email Security Checker)
+Analyse complète via DNS-over-HTTPS Cloudflare (sans dépendance dnspython) :
+
+| Check | Détails |
+|-------|---------|
+| **SPF** | `+all` = CRITICAL · `~all` = MEDIUM · `-all` = OK · >10 DNS lookups = PermError |
+| **DKIM** | 20+ sélecteurs testés auto · clé vide = révoquée · `t=y` = test mode |
+| **DMARC** | `p=none` = HIGH · `p=quarantine` = LOW · `p=reject` = OK · `sp=` sous-domaines · `pct=` |
+| **MX** | Présence et liste des serveurs |
+| **BIMI** | Brand indicator (optionnel) |
+| **Spoof score** | 0–10 composite SPF+DKIM+DMARC |
+
+Verdict : `HIGHLY SPOOFABLE` / `MODERATELY SPOOFABLE` / `PARTIALLY PROTECTED` / `WELL PROTECTED`
+
+---
+
 ## 🔄 Proxy Rotation
 
-Tous les modules HTTP utilisent la rotation automatique via `core/proxy_manager.py`.
+Tous les modules HTTP utilisent la rotation automatique via `core/proxy_manager.py` :
 
 ```
-PROXYCAT [8] → télécharge depuis 35+ sources publiques (ProxyScrape, GeoNode,
-                GitHub listes quotidiennes, dstat.st*)
+PROXYCAT [8] → télécharge depuis 35+ sources publiques
              → valide en parallèle (100 workers)
              → conserve le top 30% le plus rapide
              → sauvegarde dans data/proxies.json
 ```
 
-*dstat.st est protégé par DiamWall — télécharger manuellement et placer dans `data/dstat_http.txt`.*
-
-Chaque module HTTP fait `proxies=px()` — si aucun proxy disponible, connexion directe automatique.
-
-### Proxy types supportés
+Chaque module fait `proxies=px()` — si aucun proxy disponible, connexion directe automatique.
 
 | Type | Format | Notes |
 |------|--------|-------|
@@ -362,246 +496,89 @@ Chaque module HTTP fait `proxies=px()` — si aucun proxy disponible, connexion 
 
 ## 🌐 Tunnels (`core/tunnel.py`)
 
-Tous les modules nécessitant une URL publique (PHISH, TRACK) partagent le même gestionnaire de tunnel :
-
 | # | Service | Prérequis | Notes |
 |---|---------|-----------|-------|
-| 1 | **cloudflared** | Auto-téléchargé (~20 MB, une seule fois) | HTTPS, le plus fiable, vérifié avant usage |
+| 1 | **cloudflared** | Auto-téléchargé (~20 MB) | HTTPS, le plus fiable |
 | 2 | **serveo.net** | SSH | Aucun install |
 | 3 | **localhost.run** | SSH | Aucun install |
 | 4 | **bore.pub** | `cargo install bore-cli` | Nécessite Rust |
 | 5 | **Pas de tunnel** | — | LAN uniquement |
 
-Le tunnel attend activement que l'URL soit joignable (probe HTTP, max 15s) avant d'afficher le lien — plus de `ERR_NAME_NOT_RESOLVED`.
+---
+
+## 💥 STRESS — 26 méthodes
+
+| Layer | Méthode | Description |
+|-------|---------|-------------|
+| L7 | `HTTP_GET/POST/HEAD` | Flood classique + User-Agent rotation + proxy |
+| L7 | `HTTP_BYPASS` | X-Forwarded-For random + Pragma/no-cache + referrer |
+| L7 | `HTTP_JSON` | JSON POST flood (REST APIs) |
+| L7 | `HTTP_COOKIE` | Cookie overflow — 50-100 cookies/req |
+| L7 | `HTTP_XMLRPC` | WordPress xmlrpc.php multicall (100 auth/req) |
+| L7 | `RESONANCE` | Loi de Little — P75-based adaptive interval |
+| L7 | `PULSAR` | **Vagues synchronisées** — threading.Barrier, sature accept() OS |
+| L7 | `SLOWLORIS` | Keepalive starvation — connexions incomplètes |
+| L7 | `RUDY` | R-U-Dead-Yet — slow POST, 1 byte/tick |
+| L7 | `TLS` | TLS handshake flood — CPU-heavy |
+| L4 | `TCP/UDP` | Connect flood / datagram flood |
+| L3 | `ICMP` | Echo flood |
+| L7 | `H2_CONTINUATION` | ★★★★★ CVE-2024-27316 — HEADERS sans END_HEADERS |
+| L7 | `H2_RST` | ★★★★ CVE-2023-44487 — RST Storm |
+| L7 | `WS_FLOOD` | ★★★★ WebSocket PING flood |
+| ANON | `SPECTER` | ★★★★ Tor flood — auto-install, circuit renewal |
+| ANON | `WRAITH` | ★★★★ I2P flood — garlic routing |
+| ANON | `PHANTOM_MIX` | ★★★★ Tor + I2P alternés |
+| MEGA | **`SWARM`** | ★★★★★ 5 méthodes simultanées |
+
+**PULSAR** : `threading.Barrier(N)` synchronise tous les workers à la même milliseconde → sature le pool `accept()` OS.
+
+**SWARM** : 30% BYPASS + 25% PULSAR + 20% COOKIE + 15% SLOWLORIS + 10% TLS.
+
+**Bypass Cloudflare / JA3** : `curl_cffi` avec vraie empreinte TLS Chrome 110 — Cloudflare Bot Score voit du trafic légitime.
 
 ---
 
-## 💥 Détail des méthodes STRESS (26 méthodes)
-
-### Proxy healthcheck automatique
-
-Avant chaque attaque avec `proxy=ON`, le module effectue un **checkup rapide** :
-- Teste 50 proxies du pool en parallèle (timeout 4s) contre l'URL cible
-- Marque les proxies morts → ne seront plus distribués aux workers
-- Affiche le nombre de proxies vivants avant de lancer les threads
-
-### Méthodes disponibles
-
-| Layer | # | Méthode | Description |
-|-------|---|---------|-------------|
-| L7 | 1 | `HTTP_GET` | GET flood avec User-Agent rotation + proxy |
-| L7 | 2 | `HTTP_POST` | POST flood avec body aléatoire + proxy |
-| L7 | 3 | `HTTP_HEAD` | HEAD flood avec cache-busting + proxy |
-| L7 | 4 | `HTTP_BYPASS` | X-Forwarded-For random + Pragma/no-cache + referrer spoof |
-| L7 | 5 | `HTTP_JSON` | JSON POST flood (REST APIs) + proxy |
-| L7 | 6 | `HTTP_COOKIE` | Cookie overflow — 50-100 cookies par requête + proxy |
-| L7 | 7 | `HTTP_XMLRPC` | WordPress xmlrpc.php multicall (100 auth/req) + proxy |
-| L7 | 8 | `HTTP_RANGE` | Range header abuse (CVE-2011-3192 style) + proxy |
-| L7 | 9 | `HTTP_MIXED` | Rotation aléatoire GET/POST/HEAD/BYPASS + proxy |
-| L7 | 16 | `RESONANCE` | Saturation adaptative via loi de Little — P75-based interval |
-| L7 | 17 | `PULSAR` | **Vagues synchronisées** — threading.Barrier, sature accept() OS |
-| L7 | 10 | `SLOWLORIS` | Keepalive starvation — connexions incomplètes (SOCKS) |
-| L7 | 11 | `RUDY` | R-U-Dead-Yet — slow POST, Content-Length=999999, 1 byte/tick |
-| L7 | 12 | `TLS` | TLS handshake flood — CPU-heavy sur le serveur (SOCKS) |
-| L4 | 13 | `TCP` | TCP connect flood (SOCKS) |
-| L4 | 14 | `UDP` | UDP datagram flood (raw socket) |
-| L3 | 15 | `ICMP` | ICMP echo flood |
-| L7 | 18 | `MIRROR` | Multi-target round-robin — frappe N cibles en parallèle |
-| L7 | 19 | `H2_CONTINUATION` | ★★★★★ HEADERS sans END_HEADERS → OOM serveur (CVE-2024-27316) |
-| L7 | 20 | `H2_RST` | ★★★★ RST Storm → alloc/dealloc par stream (CVE-2023-44487) |
-| L7 | 21 | `WS_FLOOD` | ★★★★ WebSocket PING flood → PONG obligatoire RFC 6455 |
-| L7 | 22 | `SLOW_CHUNK` | ★★★ Chunked slow body → bypass mitigations RUDY |
-| L4 | 23 | `QUIC_FLOOD` | ★★★ UDP/443 QUIC Initial flood → cibles HTTP/3 |
-| ANON | 24 | `SPECTER` | ★★★★ Tor flood — auto-install Tor + stem, circuit renewal |
-| ANON | 25 | `WRAITH` | ★★★★ I2P flood — garlic routing, auto-install i2p (Linux) |
-| ANON | 26 | `PHANTOM_MIX` | ★★★★ Tor + I2P alternés — double pool d'exit IPs, auto-fallback |
-| MEGA | — | `SWARM` | ★★★★★ MULTI-VECTEUR 5 méthodes simultanées (voir ci-dessous) |
-
-### Méthodes anonymes — auto-install
-
-SPECTER, WRAITH et PHANTOM_MIX installent et démarrent automatiquement les outils nécessaires :
-
-| Méthode | Dépendance | Windows | Linux | macOS |
-|---------|-----------|---------|-------|-------|
-| SPECTER | Tor daemon | winget → Tor Expert Bundle (auto-dl) | apt/dnf/pacman install tor + systemctl | brew install tor |
-| SPECTER | stem (Python) | pip install stem | pip install stem | pip install stem |
-| WRAITH | I2P + proxy port 4444 | instructions manuelles | apt install i2p + i2prouter start | instructions manuelles |
-| PHANTOM_MIX | Tor + I2P | combiné ci-dessus | combiné ci-dessus | combiné ci-dessus |
-
-Le module attend activement que le port réponde (9050 pour Tor, 4444 pour I2P) avant de lancer les workers.
-
-### RESONANCE
-
-Basée sur la **loi de Little** (L = λW) : chaque worker calcule l'intervalle optimal entre requêtes pour maintenir exactement 100% de charge sans créer de file d'attente. Un timer adaptatif recalcule le P75 toutes les 3 secondes.
-
-### PULSAR ⚡ (méthode inédite)
-
-`threading.Barrier(N)` synchronise **tous les workers à la même milliseconde**.
-
-```
-t=0ms  : N workers tirent simultanément → sature le pool accept() OS (128-512 slots)
-t=Xms  : tous les workers dorment ensemble (coordonné)
-t=2Xms : nouvelle vague — repeat
-```
-
-- Les rate limiters mesurent 0 req/s pendant X ms puis N req en < 5 ms → la moyenne reste basse, le pic détruit le serveur
-- `stream=True` + `r.close()` immédiat → serveur génère la réponse complète mais ne peut pas la livrer → RAM bufferisée pour rien
-- Connexion fraîche à chaque burst (`Connection: close`) → impossible de réutiliser les sessions
-
-### Bypass Cloudflare / JA3 (`curl_cffi`)
-
-Disponible pour toutes les méthodes HTTP (1-9, 16, 17) :
-
-```bash
-pip install curl_cffi
-```
-
-Active dans le menu via l'option **"Bypass Cloudflare/JA3?"**. Utilise `curl_cffi` avec les vraies empreintes TLS de Chrome (JA3 fingerprint, HTTP/2 SETTINGS frames, cipher suites order) — Cloudflare Bot Score voit du trafic Chrome légitime.
-
-| Mode | TLS Fingerprint | Cloudflare Score |
-|------|----------------|-----------------|
-| `requests` | Python/urllib (connu) | Bloqué |
-| `curl_cffi` | Chrome 110 / Firefox 102 | Légitime |
-
-Activé par défaut pour PULSAR.
-
-### SWARM 🌪️ (multi-vecteur — pire qu'un botnet)
-
-Lance **5 factions simultanées** sur la même cible :
-
-| Faction | % workers | Méthode |
-|---------|-----------|---------|
-| BYPASS | 30% | HTTP_BYPASS — headers X-Forwarded-For aléatoires |
-| PULSAR | 25% | Vagues synchronisées (Barrier) |
-| COOKIE | 20% | Cookie overflow — 50-100 cookies/req |
-| SLOWLORIS | 15% | Keepalive starvation |
-| TLS | 10% | TLS handshake flood |
-
-```bash
-# Exemple : 200 workers SWARM pendant 120s
-[16] STRESS → SWARM → workers=200 → duration=120s
-# Distribution automatique : 60 BYPASS + 50 PULSAR + 40 COOKIE + 30 SLOW + 20 TLS
-```
-
----
-
-## 🎣 PHISH — Phishing avec tunnel
-
-```
-PHISH [24] → choisir un template
-           → serveur HTTP local Python (aucune dépendance)
-           → tunnel (cloudflared auto-dl / serveo / localhost.run / bore)
-           → URL vérifiée joignable avant affichage
-           → credentials capturés en live → data/phish_YYYYMMDD.log
-           → redirect automatique vers le vrai site après capture
-```
-
-### Templates disponibles (fichiers HTML séparés dans `phish_templates/`)
+## 🎣 PHISH — 7 templates
 
 | # | Template | Fidélité | Redirect |
 |---|----------|----------|---------|
-| 1 | **Microsoft 365** | Logo SVG 4 carrés, Segoe UI, card blanche, bouton bleu | login.microsoftonline.com |
-| 2 | **Google** | Logo SVG coloré, Roboto/Google Sans, floating labels animés, footer langue | accounts.google.com |
-| 3 | **LinkedIn** | Navbar complète SVG, hero texte bordeaux, divider OR | linkedin.com |
-| 4 | **Discord** | Split-panel dark `#2b2d31`, blurple `#5865f2`, logo SVG, QR Code link | discord.com |
-| 5 | **Steam** | Navbar dark blue, panel vert gradient, bouton SIGN IN exact, Mobile App link | steampowered.com |
-| 6 | **Instagram** | Logo SVG, "Log in with Facebook", boutons App Store | instagram.com |
-| 7 | **Generic** | Terminal hacker — scanlines CSS, ASCII art, animations | configurable |
+| 1 | **Microsoft 365** | Logo SVG 4 carrés, Segoe UI, card blanche | login.microsoftonline.com |
+| 2 | **Google** | Logo SVG coloré, Roboto, floating labels animés | accounts.google.com |
+| 3 | **LinkedIn** | Navbar complète, SVG, hero bordeaux | linkedin.com |
+| 4 | **Discord** | Split-panel dark `#2b2d31`, blurple `#5865f2` | discord.com |
+| 5 | **Steam** | Navbar dark blue, panel vert gradient | steampowered.com |
+| 6 | **Instagram** | Logo SVG, "Log in with Facebook" | instagram.com |
+| 7 | **Generic** | Terminal hacker — scanlines CSS, ASCII art | configurable |
 | + | **Custom HTML** | Charge n'importe quel `.html` externe | configurable |
 
-> Ajouter un template : créer `phish_templates/monsite.html` + ajouter une entrée dans `_TPL_META` dans `phish.py`.
+---
+
+## 🕵️ TRACK — IP Grabber
+
+| Thème | Type | Comportement Discord |
+|-------|------|---------------------|
+| Photo partagée | Image | Preview card → IP sur clic |
+| Suivi de colis | Image | Preview card → IP sur clic |
+| Document partagé | Image | Preview card → IP sur clic |
+| Alerte sécurité | Image | Preview card → IP sur clic |
+| Vidéo exclusive 🔥 | **og:video** | Embed ▶ Play → IP sur lecture |
+| Clip inédit | **og:video** | Embed ▶ Play → IP sur lecture |
+| Fail du jour 😂 | **og:video** | Embed ▶ Play → IP sur lecture |
 
 ---
 
-## 🕵️ TRACK — Chameleon IP Grabber
-
-```
-TRACK [46] → génère un token unique (/t/TOKEN)
-           → OGP bait : vraie image HD (picsum.photos) → Discord/Telegram affichent la preview
-           → og:video (thèmes 5-7) : Discord affiche un embed ▶ Play → IP loggée au clic
-           → IP JS confirmée via ipify (sendBeacon /log/TOKEN)
-           → Image redirect (/t/TOKEN.jpg) : Telegram/WhatsApp chargent directement → IP auto
-           → Email pixel (/px/TOKEN) : log à l'ouverture du mail
-           → GeoIP live (ip-api.com) + User-Agent detection (Discord/Telegram/WhatsApp/browser)
-           → Tunnel : cloudflared / serveo / localhost.run / bore / LAN
-```
-
-### Thèmes leurres
-
-| # | Thème | Type | Comportement Discord |
-|---|-------|------|---------------------|
-| 1 | Photo partagée | Image | Preview card → IP sur clic |
-| 2 | Suivi de colis | Image | Preview card → IP sur clic |
-| 3 | Document partagé | Image | Preview card → IP sur clic |
-| 4 | Alerte sécurité | Image | Preview card → IP sur clic |
-| 5 | Vidéo exclusive 🔥 | **og:video** | Embed ▶ Play → IP sur lecture |
-| 6 | Clip inédit | **og:video** | Embed ▶ Play → IP sur lecture |
-| 7 | Fail du jour 😂 | **og:video** | Embed ▶ Play → IP sur lecture |
-
----
-
-## 🔒 Détail HISS (injections web)
-
-| Option | Type | Description |
-|--------|------|-------------|
-| 1 | SQLi | 20+ payloads — error-based, blind, time-based |
-| 2 | XSS | 15+ payloads — reflected, DOM, bypass encodages |
-| 3 | SQLi + XSS | Combiné |
-| 4 | Form crawl | Détection et test automatique des formulaires |
-| 5 | SSRF | 15 payloads — AWS/GCP/Azure metadata, IPv6, decimal/hex/octal |
-| 6 | CRLF | 6 payloads — header injection, Unicode bypass |
-| 7 | Open Redirect | 12 payloads — `//evil.com`, encoded, javascript: |
-| 8 | Host Header | 5 headers testés — Host, X-Forwarded-Host, X-Host... |
-| 9 | All | Tous les tests |
-
----
-
-## 🔑 Détail JWTCAT
+## 🔑 JWTCAT — Attaques JWT
 
 | Attaque | Description |
 |---------|-------------|
 | **alg:none** | 5 variantes de casse (none/None/NONE/nOnE/NoNe) |
 | **RS256→HS256** | Confusion algorithme — signe avec la clé publique comme secret HMAC |
-| **HMAC brute force** | HS256/384/512 — wordlist custom ou dictionnaire intégré 35 secrets communs |
+| **HMAC brute** | HS256/384/512 — wordlist custom ou dictionnaire 35 secrets communs |
 | **Token forge** | Édition libre du payload + resign |
 
 ---
 
-## 🌐 Détail WHISKER
-
-| Option | Description |
-|--------|-------------|
-| 1 | Full recon (DNS + WHOIS + GeoIP) |
-| 2 | DNS only (A, NS, MX, TXT, AAAA, CNAME...) |
-| 3 | WHOIS only |
-| 4 | GeoIP only |
-| 5 | **Zone Transfer (AXFR)** — test sur chaque NS record |
-| 6 | **Certificate Transparency (crt.sh)** — subdomains sans clé API |
-| 7 | Full recon + AXFR + crt.sh |
-
----
-
-## 🔄 Détail TAKEOVER (subdomain takeover)
-
-27 services fingerrintés avec **fallback multi-source** :
-
-```
-crt.sh (3 tentatives, timeout progressif 10-20-30s)
-  ↓ si timeout/échec
-HackerTarget hostsearch API (gratuit, sans clé)
-  ↓ si échec
-riddler.io fdns search
-  ↓ si tout échoue
-Saisie manuelle proposée automatiquement
-```
-
-GitHub Pages · Heroku · AWS S3 · Vercel · Netlify · Fastly · Shopify · Tumblr · WP Engine · Ghost · Surge.sh · Readme.io · Statuspage · Zendesk · UserVoice · Freshdesk · HubSpot · Intercom · Campaign Monitor · Helpscout · Pingdom · Tilda · Webflow · Strikingly · Cargo · Uberflip · Fly.io
-
----
-
-## 🖥️ Reverse Shells (REVSHELL)
-
-21 types générés automatiquement avec IP/port configurables :
+## 🖥️ Reverse Shells (21 types)
 
 `bash_tcp` · `bash_b64` · `sh_udp` · `python3` · `python2` · `python_b64` · `php_exec` · `php_proc` · `nc_e` · `nc_mkfifo` · `perl` · `ruby` · `powershell` · `powershell_b64` · `powershell_download` · `node` · `socat` · `golang` · `java` · `awk` · `lua`
 
@@ -609,67 +586,44 @@ Listener intégré : `nc`, `ncat`, `socat`, `pwncat`, `metasploit`
 
 ---
 
-## ☁️ Détail BUCKET (cloud buckets)
+## ☁️ BUCKET — Cloud Storage
 
 | Provider | URL pattern | Détection |
 |----------|-------------|-----------|
-| AWS S3 | `s3.amazonaws.com/<name>` | PUBLIC_READ (listing), EXISTS_403 |
+| AWS S3 | `s3.amazonaws.com/<name>` | PUBLIC_READ, EXISTS_403 |
 | GCS | `storage.googleapis.com/<name>` | PUBLIC_READ, EXISTS_403 |
 | Azure Blob | `<name>.blob.core.windows.net` | EXISTS_200/403 |
 | DigitalOcean | `<name>.nyc3.digitaloceanspaces.com` | PUBLIC_READ, EXISTS_403 |
 
-50+ variantes de noms générées automatiquement (préfixes/suffixes : -backup, -dev, -prod, -assets...).
-
----
-
-## 📦 Installation
-
-```bash
-# Cloner / copier le dossier
-cd meow-sec
-
-# Dépendances Python
-pip install -r requirements.txt
-
-# Lancer
-python meow.py
-
-# Lancement direct d'un module
-python meow.py stress
-python meow.py phish
-python meow.py track
-python meow.py cors
-```
-
-**requirements.txt**
-```
-rich>=13.7.0
-colorama>=0.4.6
-requests>=2.31.0
-PySocks>=1.7.1
-curl_cffi>=0.6.0     ← optionnel, bypass Cloudflare JA3
-stem>=1.8.0          ← optionnel, circuit renewal Tor (SPECTER)
-```
-
-> Les dépendances manquantes sont installées automatiquement au premier lancement via `_ensure_deps()`.
-> Les outils anonymiseurs (Tor, I2P) sont installés automatiquement à l'entrée de SPECTER/WRAITH/PHANTOM_MIX.
+50+ variantes de noms auto-générées (préfixes/suffixes : `-backup`, `-dev`, `-prod`, `-assets`...)
 
 ---
 
 ## 📊 Rapport HTML (REPORT)
 
-Le module REPORT agrège tous les fichiers JSON de `data/` et génère un rapport HTML standalone :
-- Résumé timeline de tous les scans
-- Sections : Ports, Web Recon, DNS, WAF, OSINT, Stress, CVE, Takeover, Buckets
-- Sections collapsibles (JS)
+- Résumé timeline de tous les scans `data/*.json`
+- Sections collapsibles : Ports, Web Recon, DNS, WAF, OSINT, Injections, CVE, Takeover, Buckets
 - Dark matrix theme inline (aucune dépendance externe)
 - Ouverture automatique dans le navigateur
 
 ---
 
+## 🔄 Changelog
+
+| Version | Modules | Nouveautés |
+|---------|---------|------------|
+| **v1.5** | 61 | URLSPOOF · MAILSPOOF · IPLOOKUP · PHONELOOKUP |
+| **v1.4** | 57 | IDOR · UPLOAD · RACE · LDAPI · EMAILSEC |
+| **v1.3** | 52 | SQLI · CMDI · NOSQLI · ORMI · WPSCAN · FRONTSCAN |
+| **v1.2** | 46 | SMUGGLE · XXE · GITDUMP · SSTI · SECRETSCAN · CACHE · OAUTH · DESERIA · PROTO · BREACH · SHODAN · TRACK |
+| **v1.1** | 34 | CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA |
+| **v1.0** | 24 | Core modules |
+
+---
+
 ## Disclaimer
 
-> **Ce projet est strictement éducatif.** Utilisation réservée aux CTF, red team autorisé et recherche en sécurité. L'utilisation de cet outil sur des systèmes sans autorisation explicite est illégale dans la plupart des juridictions. Les auteurs ne sont pas responsables de toute utilisation abusive. Respectez la loi.
+> **Ce projet est strictement éducatif.** Utilisation réservée aux CTF, red team autorisé et recherche en sécurité. L'utilisation de cet outil sur des systèmes sans autorisation explicite est illégale dans la plupart des juridictions. Les auteurs ne sont pas responsables de toute utilisation abusive. **Respectez la loi. Stay legal.**
 
 ---
 
@@ -681,8 +635,8 @@ Le module REPORT agrège tous les fichiers JSON de `data/` et génère un rappor
 
 ```
    /\_/\
-  ( o.o )   MEOW-SEC v1.3 // BY CAT-PROJECT-HAT // 2026
-   > ^ <
-  /|   |\
+  ( o.o )   MEOW-SEC v1.5 // BY CAT-PROJECT-HAT // 2026
+   > ^ <    61 modules · Python 3 · Rich TUI
+  /|   |\   Stay in the shadows. Stay curious.
  (_|   |_)
 ```

@@ -63,7 +63,7 @@ def show_banner():
 
     logo_text = Text()
     logo_text.append("◈ MEOW-SEC ", style=f"bold {G1}")
-    logo_text.append("v1.1", style=G2)
+    logo_text.append("v1.2", style=G2)
     logo_text.append("  ::  CAT HACKER TOOLKIT", style=DM)
 
     meta_text = Text()
@@ -122,6 +122,12 @@ def show_module_banner(module: str):
         "breach":     ("BREACH",     "Data Breach Checker",            CY),
         "shodan":     ("SHODAN",     "Shodan-Lite IP Recon (no key)",  G1),
         "track":      ("TRACK",      "Chameleon IP Grabber (WebP trap)", OR),
+        "sqli":       ("SQLI",       "Advanced SQL Injection (error/blind/UNION)", RD),
+        "cmdi":       ("CMDI",       "OS Command Injection (verbose + blind)",     RD),
+        "nosqli":     ("NOSQLI",     "NoSQL Injection (MongoDB/$where/array)",     RD),
+        "ormi":       ("ORMI",       "ORM Injection (HQL/JPQL/LINQ/Django/Rails)", RD),
+        "wpscan":     ("WPSCAN",     "WordPress Vuln Scanner (plugins/CVEs/users)", RD),
+        "frontscan":  ("FRONTSCAN",  "React/TS/TSX Vuln Scanner (static + remote)",  OR),
     }
     name, desc, color = names.get(module.lower(), (module.upper(), "", G1))
     console.print(Rule(f"[bold {color}] {name} [/][{DM}] {desc} ", style=G2))
@@ -148,6 +154,10 @@ _MENU_RECON = [
 ]
 _MENU_EXPLOIT = [
     ("5",  "HISS",    "SQLi/XSS+"),
+    ("47", "SQLI",    "SQLi avancé"),
+    ("48", "CMDI",    "cmd inject"),
+    ("49", "NOSQLI",  "NoSQL inject"),
+    ("50", "ORMI",    "ORM inject"),
     ("25", "CORS",    "CORS misconfig"),
     ("26", "LFI",     "LFI/RFI"),
     ("27", "FUZZ",    "param fuzz"),
@@ -164,8 +174,10 @@ _MENU_NET = [
     ("15", "NETKIT",  "net tools"),
     ("16", "STRESS",  "stress/flood"),
     ("21", "BRUTE",   "HTTP brute"),
-    ("22", "CMS",     "CMS detect"),
-    ("23", "SSLSCAN", "SSL/TLS"),
+    ("22", "CMS",      "CMS detect"),
+    ("23", "SSLSCAN",  "SSL/TLS"),
+    ("51", "WPSCAN",   "WP vulns"),
+    ("52", "FRONTSCAN","React/TS scan"),
     ("31", "BUCKET",  "cloud buckets"),
     ("32", "SPRAY",   "pwd spray"),
     ("33", "GRAPHQL", "GraphQL atk"),

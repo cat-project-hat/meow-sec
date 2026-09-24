@@ -7,12 +7,12 @@ By cat-project-hat // 2026
 For authorized penetration testing, CTF challenges and security research only.
 Unauthorized use is illegal. Use only on systems you own or have explicit written permission to test.
 
-45 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
+52 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
             PROXYCAT · PAWS · MEWHASH · CODEC · PAYLOAD · NETKIT · STRESS · LOOT
             REVSHELL · WAF · JWTCAT · REPORT · BRUTE · CMS · SSLSCAN · PHISH
             CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA
             SMUGGLE · XXE · GITDUMP · SSTI · SECRETSCAN · CACHE · OAUTH · DESERIA · PROTO
-            BREACH · SHODAN
+            BREACH · SHODAN · TRACK · SQLI · CMDI · NOSQLI · ORMI · WPSCAN · FRONTSCAN
 """
 
 import sys
@@ -97,9 +97,9 @@ def boot():
     console.print()
 
     BOOT_MSGS = [
-        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 46 modules active"),
+        (f"[{G1}]BOOT[/]", "meow.sec kernel loaded — 52 modules active"),
         (f"[{OR}]WARN[/]", "authorized targets only"),
-        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.1 — 46 modules active"),
+        (f"[bold {G1}]READY[/]", "MEOW-SEC v1.3 — 52 modules active"),
     ]
     for tag, msg in BOOT_MSGS:
         time.sleep(0.08)
@@ -285,6 +285,24 @@ def dispatch(choice: str):
     elif choice in ("46", "track", "ipgrab"):
         from modules import track; track.run()
 
+    elif choice in ("47", "sqli", "sqlinject"):
+        from modules import sqli; sqli.run()
+
+    elif choice in ("48", "cmdi", "cmdinject", "cmdinj", "rce"):
+        from modules import cmdi; cmdi.run()
+
+    elif choice in ("49", "nosqli", "nosql", "mongodb"):
+        from modules import nosqli; nosqli.run()
+
+    elif choice in ("50", "ormi", "orm", "hql", "jpql"):
+        from modules import ormi; ormi.run()
+
+    elif choice in ("51", "wpscan", "wp", "wordpress"):
+        from modules import wpscan; wpscan.run()
+
+    elif choice in ("52", "frontscan", "react", "frontend", "tsx", "typescript"):
+        from modules import frontscan; frontscan.run()
+
     elif choice in ("0", "exit", "quit", "q"):
         return False
 
@@ -363,6 +381,26 @@ def main():
             "proto":     "43",
             "breach":    "44",
             "shodan":    "45",
+            "sqli":      "47",
+            "sqlinject": "47",
+            "cmdi":      "48",
+            "cmdinject": "48",
+            "rce":       "48",
+            "nosqli":    "49",
+            "nosql":     "49",
+            "mongodb":   "49",
+            "ormi":      "50",
+            "orm":       "50",
+            "hql":       "50",
+            "jpql":      "50",
+            "wpscan":    "51",
+            "wp":        "51",
+            "wordpress": "51",
+            "frontscan": "52",
+            "react":     "52",
+            "frontend":  "52",
+            "tsx":       "52",
+            "typescript":"52",
         }
         mod = args[0].lower()
         if mod in module_map:
@@ -409,7 +447,7 @@ def main():
 
 def _print_help():
     console.print(f"""
-[bold {G1}]MEOW-SEC[/]  v1.1  —  Cat-Themed Security Toolkit
+[bold {G1}]MEOW-SEC[/]  v1.3  —  Cat-Themed Security Toolkit
 [{DM}]by cat-project-hat // 2026[/]
 
 [{CY}]Usage:[/]
@@ -439,7 +477,10 @@ def _print_help():
   secretscan Secrets scanner          cache     Cache poisoning
   oauth     OAuth misconfig           deseria   Deserialization
   proto     Proto pollution           breach    Breach check
-  shodan    IP recon (no key)
+  shodan    IP recon (no key)         track     IP grabber (WebP)
+  sqli      SQLi avancé (error/blind) cmdi      Command injection
+  nosqli    NoSQL injection           ormi      ORM injection (HQL/LINQ)
+  wpscan    WordPress vulns           frontscan React/TS/TSX scanner
 
 [{G1}]Proxy:[/]
   Run PROXYCAT first to download & validate proxies.

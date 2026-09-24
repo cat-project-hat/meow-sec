@@ -8,13 +8,13 @@
 
 # MEOW-SEC
 
-**By cat-project-hat // v1.2 // 2026**
+**By cat-project-hat // v1.3 // 2026**
 
-Toolkit de sécurité offensif Python 3 — interface TUI Rich — 46 modules — thème chat hacker
+Toolkit de sécurité offensif Python 3 — interface TUI Rich — 52 modules — thème chat hacker
 
 ![Python](https://img.shields.io/badge/Python-3.10+-green?style=flat-square&logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue?style=flat-square)
-![Modules](https://img.shields.io/badge/Modules-46-brightgreen?style=flat-square)
+![Modules](https://img.shields.io/badge/Modules-52-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-Educational-red?style=flat-square)
 ![Proxy](https://img.shields.io/badge/Proxy-Rotation-orange?style=flat-square)
 ![CF Bypass](https://img.shields.io/badge/Cloudflare-Bypass-yellow?style=flat-square)
@@ -91,7 +91,13 @@ meow-sec/
     ├── proto.py         ← Prototype pollution tester (Node.js)
     ├── breach.py        ← Data breach checker (HIBP k-anonymity + LeakCheck)
     ├── shodan_lite.py   ← Shodan-Lite IP recon (internetdb.shodan.io, no key)
-    └── track.py         ← Chameleon IP Grabber — OGP bait + og:video Discord embed
+    ├── track.py         ← Chameleon IP Grabber — OGP bait + og:video Discord embed
+    ├── sqli.py          ← SQL injection avancé (error-based, blind, time-based, UNION, MariaDB)
+    ├── cmdi.py          ← OS command injection tester (verbose + blind time-based + headers)
+    ├── nosqli.py        ← NoSQL injection tester (MongoDB $ne/$gt/$regex/$where, Redis, CouchDB)
+    ├── ormi.py          ← ORM injection (TypeORM QB/orderBy/find, HQL, JPQL, LINQ, Django, Sequelize)
+    ├── wpscan.py        ← WordPress vuln scanner (CVEs, plugins, thèmes, user enum, XMLRPC)
+    └── frontscan.py     ← React/TypeScript/TSX scanner statique + remote bundle analysis
 ```
 
 ---
@@ -146,6 +152,12 @@ meow-sec/
 | 44 | **BREACH** | Data breach checker — HIBP k-anonymity (FREE), email lookup, breach list |
 | 45 | **SHODAN** | Shodan-Lite IP recon — internetdb.shodan.io (no key), CIDR scan, crt.sh |
 | 46 | **TRACK** | Chameleon IP Grabber — OGP bait + og:video Discord embed + GeoIP live |
+| 47 | **SQLI** | SQL injection avancé — error-based, boolean-blind, time-based, UNION, MariaDB |
+| 48 | **CMDI** | OS command injection — verbose output, blind time-based, HTTP header injection |
+| 49 | **NOSQLI** | NoSQL injection — MongoDB $ne/$gt/$regex/$where, array injection, JSON auth bypass |
+| 50 | **ORMI** | ORM injection — TypeORM QueryBuilder/orderBy/find bypass, HQL, JPQL, LINQ, Django, Sequelize |
+| 51 | **WPSCAN** | WordPress scanner — version + CVEs, plugins, thèmes, user enum, XMLRPC, fichiers sensibles |
+| 52 | **FRONTSCAN** | React/TypeScript/TSX — analyse statique .ts/.tsx + scan remote bundle/sourcemaps |
 
 ---
 
@@ -212,12 +224,91 @@ Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis
 - Scan CIDR /24 (256 IPs) en parallèle
 - Lookup de domaine + résolution DNS + crt.sh pour les sous-domaines via CT
 
+### Module 47 — SQLI (SQL Injection avancé)
+Tester complet multi-DB avec 4 méthodes d'injection :
+- **Error-based** : 7 bases détectées (MySQL, MariaDB, PostgreSQL, MSSQL, Oracle, SQLite, Generic) — signatures d'erreur spécifiques par DB
+- **Boolean-blind** : 2 payloads `AND 1=1` / `AND 1=2` — comparaison taille/status de réponse
+- **Time-based blind** : `SLEEP()`, `WAITFOR DELAY`, `pg_sleep()`, `DBMS_PIPE.RECEIVE_MESSAGE()` — seuil 3× la baseline
+- **UNION-based** : détection automatique du nombre de colonnes (jusqu'à 20), injection de marqueur `MEOW_`
+- **MariaDB spécifique** : signatures `er_parse_error`, `com.mariadb.jdbc`, extraction via `information_schema` incluant le champ `engine`
+- **Extraction** : version, user courant, base courante, liste des tables (par DB détectée)
+- Méthodes testées : GET params, POST form, POST JSON, segment de chemin
+
+### Module 48 — CMDI (OS Command Injection)
+- **Verbose** : marqueurs Unix (`uid=`, `root`, `www-data`) + Windows (`NT AUTHORITY`, `system32`)
+- **Blind time-based** : `sleep 4` (Linux) et `ping -n 5 127.0.0.1` (Windows) — mesure du delta de temps
+- **Header injection** : User-Agent, Referer, X-Forwarded-For, X-Real-IP
+- Payloads : 16 vecteurs Unix (`id`, `whoami`, backtick, `$(cmd)`, pipe...) + 8 vecteurs Windows
+- Méthodes : GET, POST form, POST JSON, HTTP headers
+
+### Module 49 — NOSQLI (NoSQL Injection)
+- **MongoDB operator injection** (GET params) : `$ne`, `$gt`, `$regex`, `$where`, `$nin` — détecte les réponses anormalement longues
+- **JSON auth bypass** : `{"$ne": None}`, `{"$gt": ""}`, `{"$regex": ".*"}` — envoi en `Content-Type: application/json`
+- **Array type confusion** : passage de `param=val` à `param[]=val` — confusion de type BSON
+- **`$where` JS injection** : `{"$where": "sleep(4000)"}` — détection time-based
+- **Redis/CouchDB** : erreurs de syntaxe spécifiques (`WRONGTYPE`, `ERR syntax`, CouchDB `bad_request`)
+- Signatures d'erreur par base : MongoDB, Redis, CouchDB
+
+### Module 50 — ORMI (ORM Injection)
+Frameworks supportés : **TypeORM**, Hibernate/HQL, JPQL, LINQ, Django ORM, Eloquent/Laravel, ActiveRecord/Rails, Sequelize (Node.js)
+
+#### TypeORM (spécifique)
+- **QueryBuilder string concat** : 10 payloads `.where()` — `' OR '1'='1'-- -`, UNION SELECT, `pg_sleep()`, `SLEEP()`, `WAITFOR DELAY`
+- **`.orderBy(userInput)` injection** : ORDER BY manipulation — `id ASC; DROP TABLE users--`, CASE WHEN, FIELD()
+- **`find()` operator bypass** : objets FindOperator internes `{"_type": "moreThan", "_value": 0}`, `{"_type": "like", "_value": "%"}`, `{"_type": "raw", "_value": "1=1"}` + style Prisma `{"gt": 0}`
+- **`dataSource.query(\`${input}\`)` raw query** : mêmes payloads que QB
+- Signatures d'erreur TypeORM : `queryfailederror`, `entitynotfounderror`, `could not find metadata for`, `column was not found in`
+
+#### Autres frameworks
+- **HQL/JPQL** : `' OR '1'='1`, injections `FROM User`, `UNION SELECT`
+- **LINQ** : `null reference`, `sequence contains`, detection erreurs .NET
+- **Django ORM** : `OperationalError`, `ProgrammingError`, payloads `__icontains`, `__regex`
+- **Eloquent** : `QueryException`, `SQLSTATE` Laravel
+- **ActiveRecord** : `ActiveRecord::StatementInvalid`, payloads Ruby
+- **Sequelize** : `SequelizeDatabaseError`, payloads Node.js
+
+### Module 51 — WPSCAN (WordPress Vulnerability Scanner)
+- **Détection de version** : `readme.html`, meta generator, RSS feed, paramètre `ver=` des assets
+- **CVE par version** : base de données intégrée WordPress 4.x → 6.4+ (CVE-2023-5561, CVE-2022-21661, CVE-2022-21662...)
+- **Plugins vulnérables** : 20 plugins — contact-form-7, woocommerce, elementor, wp-file-manager, ultimate-member, revslider, duplicator, timthumb...
+- **Thèmes vulnérables** : 5 thèmes — divi, avada, enfold, newspaper
+- **Énumération utilisateurs** : REST API `/wp-json/wp/v2/users` + redirect `?author=1..5`
+- **XML-RPC** : détection `xmlrpc.php` + `system.listMethods` (amplification brute force)
+- **Fichiers sensibles** : 25 chemins — `wp-config.php`, `.env`, `debug.log`, `phpinfo.php`, backups...
+- **En-têtes de sécurité** : X-Frame-Options, CSP, HSTS, X-Content-Type-Options
+- **WP-Cron public** : détection `wp-cron.php` accessible
+- Modes : full / version+CVEs / plugins+thèmes / énumération users / fichiers+headers
+
+### Module 52 — FRONTSCAN (React / TypeScript / TSX Scanner)
+
+#### Mode 1 — Analyse statique (projet local)
+Scanne tous les fichiers `.ts`, `.tsx`, `.js`, `.jsx` (hors `node_modules`, `dist`, `.next`...) :
+
+| Catégorie | Patterns détectés |
+|-----------|-------------------|
+| XSS | `dangerouslySetInnerHTML`, `innerHTML =`, `document.write`, `eval()` |
+| Injections TypeORM | QueryBuilder concat, `.orderBy(userInput)`, `dataSource.query(\`${}\`)`, `find({where: req.body})`, `.select([userInput])`, `.where(':param')` sans binding |
+| Secrets hardcodés | `apiKey`, `secretKey`, `password =`, `token =`, clés AWS/Stripe/GitHub |
+| Stockage sensible | `localStorage`/`sessionStorage` avec `password`, `token`, `secret` |
+| Redirections ouvertes | `window.location = req.params`, navigation vers `userInput` |
+| Prototype pollution | `Object.assign({}, userInput)`, spread `...req.body` sur objets sensibles |
+| CORS wildcard | `Access-Control-Allow-Origin: *` dans fetch/axios |
+| Requêtes non sanitisées | `fetch(userInput)`, `axios.get(params.url)` |
+
+#### Mode 2 — Scan remote (app déployée)
+- Découverte des bundles JS depuis `index.html`
+- Détection **source maps exposées** (`.js.map`) — extraction de code source
+- Extraction de **secrets dans les bundles** (AWS key, GitHub token, JWT secret, Stripe key)
+- **GraphQL introspection** activée — dump du schéma complet
+- **`window.__INITIAL_STATE__`** — fuite de données serveur dans le HTML
+- 18 chemins de bundles testés automatiquement
+
 ---
 
 ## 🐱 Menu
 
 ```
-╭─────────────── ◈  MEOW-SEC  v1.2  ::  46 modules  ◈ ─────────────────╮
+╭─────────────── ◈  MEOW-SEC  v1.3  ::  52 modules  ◈ ─────────────────╮
 │  /\_/\           /\_/\           /\_/\           /\_/\                │
 │ ( o.o )         ( >.< )         ( ^.^ )         ( o_o )               │
 │   > w <           > ~ <           > v <           > x <               │
@@ -233,11 +324,11 @@ Utilise des raw sockets (pas de requests) pour envoyer des payloads HTTP précis
 │  [18] WAF        [40] CACHE      [32] SPRAY      [20] REPORT           │
 │  [28] CVE        [41] OAUTH      [33] GRAPHQL    [24] PHISH            │
 │  [29] HARVEST    [42] DESERIA    [34] 2FA        [46] TRACK            │
-│  [30] TAKEOVER   [43] PROTO                      [ 0] EXIT             │
-│  [37] GITDUMP                                                          │
-│  [39] SECRETSCAN                                                       │
-│  [44] BREACH                                                           │
-│  [45] SHODAN                                                           │
+│  [30] TAKEOVER   [43] PROTO      [51] WPSCAN     [ 0] EXIT             │
+│  [37] GITDUMP    [47] SQLI       [52] FRONTSCAN                        │
+│  [39] SECRETSCAN [48] CMDI                                             │
+│  [44] BREACH     [49] NOSQLI                                           │
+│  [45] SHODAN     [50] ORMI                                             │
 ╰────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -590,7 +681,7 @@ Le module REPORT agrège tous les fichiers JSON de `data/` et génère un rappor
 
 ```
    /\_/\
-  ( o.o )   MEOW-SEC v1.2 // BY CAT-PROJECT-HAT // 2026
+  ( o.o )   MEOW-SEC v1.3 // BY CAT-PROJECT-HAT // 2026
    > ^ <
   /|   |\
  (_|   |_)

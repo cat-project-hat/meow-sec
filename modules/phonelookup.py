@@ -19,7 +19,7 @@ except ImportError:
 
 from core.proxy_manager import px as _px
 
-_UA  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+_UA  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 _UA2 = "MEOW-SEC/1.5 (authorized-osint)"
 
 # ─── COUNTRY PREFIX TABLE ────────────────────────────────────
@@ -434,11 +434,15 @@ def _social_media_links(e164: str) -> list:
         ("Signal",                 f"https://signal.me/#p/{e164}"),
         ("Viber",                  f"viber://chat?number={e164}"),
         ("Facebook (recherche)",   f"https://www.facebook.com/search/top?q={e164}"),
-        ("Instagram (recherche)",  f"https://www.instagram.com/explore/tags/{digits}/"),
+        ("Instagram (recherche)",  f"https://www.instagram.com/{digits}/"),
         ("LinkedIn (recherche)",   f"https://www.linkedin.com/search/results/all/?keywords={e164}"),
-        ("Snapchat (recherche)",   f"https://www.snapchat.com/add/{digits}"),
+        ("LinkedIn Search",        f"https://www.linkedin.com/search/results/people/?keywords={digits}"),
+        ("Facebook Search",        f"https://www.facebook.com/search/people/?q={digits}"),
+        ("Snapchat (recherche)",   f"https://www.snapchat.com/search?q={digits}"),
         ("TikTok (recherche)",     f"https://www.tiktok.com/search?q={e164}"),
         ("Skype (recherche)",      f"https://web.skype.com/search?query={e164}"),
+        ("Botim (MENA)",           f"https://botim.me/{digits}"),
+        ("NumSpy OSINT",           f"https://numspy.io/search?q={digits}"),
     ]
 
 def _reverse_lookup_links(e164: str) -> list:
@@ -512,7 +516,7 @@ def run():
     console.print(f"\n  [{CY}]╔══ PROPRIÉTAIRE ══╗[/]")
     info("Scraping annuaire-inverse, spy-numerics, pagesjaunes...")
 
-    with ThreadPoolExecutor(max_workers=3) as pool:
+    with ThreadPoolExecutor(max_workers=4) as pool:
         f_owner   = pool.submit(_scrape_owner, e164, national_full)
         f_tellows = pool.submit(_scrape_tellows, national_full)
         f_arnaques= pool.submit(_scrape_lesarnaques, national_full)
@@ -534,16 +538,18 @@ def run():
         warn("Propriétaire : non trouvé dans les annuaires publics")
         info("  → Mobile non-listé, numéro professionnel, ou scraping bloqué")
 
-    # Hint du nom dans tellows si disponible
-    if tellows_data.get("owner_hint"):
-        info(f"  Tellows hint : {tellows_data['owner_hint']}")
+    # Opérateur confirmé par tellows (avec portabilité)
+    if tellows_data.get("carrier"):
+        find(f"Opérateur (Tellows live) : {tellows_data['carrier']}")
 
     # ── 4. SPAM / SIGNALEMENTS ─────────────────────────────────
     console.print(f"\n  [{CY}]╔══ SPAM & SIGNALEMENTS ══╗[/]")
 
     tw_score = tellows_data.get("score","?")
-    tw_color = (RD if tw_score not in ("?","1","2","3","4","5") else
-                OR if tw_score in ("4","5","6") else G1)
+    if tw_score == "?":                 tw_color = DM
+    elif tw_score in ("7","8","9"):     tw_color = RD
+    elif tw_score in ("4","5","6"):     tw_color = OR
+    else:                               tw_color = G1
     console.print(f"  [{CY}]Tellows score  :[/]  [{tw_color}]{tw_score}/9[/]  (1=fiable · 9=dangereux)")
 
     # Opérateur confirmé par tellows (tient compte de la portabilité)

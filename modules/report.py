@@ -361,8 +361,20 @@ def run():
     with open(fname, "w", encoding="utf-8") as f:
         f.write(html)
 
+    html_path = os.path.abspath(fname)
     find(f"Report saved: [{CY}]{fname}[/]")
-    ok(f"Open in browser: [{G1}]start {fname}[/]")
+    ok(f"Open in browser: [{G1}]{html_path}[/]")
+    info(f"Tip: drag the file into any browser, or run: [{CY}]start \"{html_path}\"[/]")
+
+    try:
+        import weasyprint
+        pdf_path = html_path.replace(".html", ".pdf")
+        weasyprint.HTML(filename=html_path).write_pdf(pdf_path)
+        ok(f"PDF → {pdf_path}")
+    except ImportError:
+        info("PDF export: install weasyprint → pip install weasyprint")
+    except Exception as e:
+        warn(f"PDF export failed: {e}")
 
     try:
         import subprocess

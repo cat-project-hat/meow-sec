@@ -25,7 +25,7 @@ MODULE_COLORS = {
 }
 
 def run():
-    show_module_banner("claw")  # fallback visuel
+    show_module_banner("loot")
     console.print()
 
     if not os.path.exists(DATA_DIR):
@@ -63,14 +63,60 @@ def run():
     console.print(t)
     console.print()
 
+    console.print(f"  [{G1}][1][/] View file   [{G1}][3][/] Diff two sessions   [{DM}][ENTER] Back[/]\n")
     choice = Prompt.ask(
-        f"[{G1}]◈ View file # (or ENTER to go back)[/]",
+        f"[{G1}]◈ Choice (file #, 3 = diff, ENTER = back)[/]",
         default=""
     ).strip()
 
     if not choice:
         return
 
+    # ── Mode [3]: diff two sessions ──────────────────────────────
+    if choice == "3":
+        console.print(f"\n  [{CY}]── Diff Two Sessions ──[/]\n")
+        a_choice = Prompt.ask(f"  [{G1}]First file #[/]", default="").strip()
+        b_choice = Prompt.ask(f"  [{G1}]Second file #[/]", default="").strip()
+        try:
+            ia = int(a_choice) - 1
+            ib = int(b_choice) - 1
+            if not (0 <= ia < len(files) and 0 <= ib < len(files)):
+                err("Invalid file number(s).")
+                return
+            with open(os.path.join(DATA_DIR, files[ia]), encoding="utf-8") as f:
+                data_a = json.load(f)
+            with open(os.path.join(DATA_DIR, files[ib]), encoding="utf-8") as f:
+                data_b = json.load(f)
+        except ValueError:
+            err("Enter valid numbers.")
+            return
+
+        keys_a = set(data_a.keys())
+        keys_b = set(data_b.keys())
+        new_keys     = keys_b - keys_a
+        removed_keys = keys_a - keys_b
+        common_keys  = keys_a & keys_b
+
+        console.print(f"\n  [{CY}]A:[/] {files[ia]}   [{CY}]B:[/] {files[ib]}\n")
+
+        if not new_keys and not removed_keys and all(data_a[k] == data_b[k] for k in common_keys):
+            ok("Sessions are identical (top-level keys and values match).")
+        else:
+            for k in sorted(new_keys):
+                val = str(data_b[k])[:80]
+                console.print(f"  [{G1}][+][/] [{G1}]{k}[/] = {val}")
+            for k in sorted(removed_keys):
+                console.print(f"  [{RD}][-][/] [{RD}]{k}[/]")
+            for k in sorted(common_keys):
+                if data_a[k] != data_b[k]:
+                    before = str(data_a[k])[:60]
+                    after  = str(data_b[k])[:60]
+                    console.print(f"  [{OR}][~][/] [{OR}]{k}[/]: {before} [{DM}]→[/] {after}")
+
+        console.print()
+        return
+
+    # ── Mode view file ────────────────────────────────────────────
     try:
         idx = int(choice) - 1
         if 0 <= idx < len(files):

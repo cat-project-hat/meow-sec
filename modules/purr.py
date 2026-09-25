@@ -66,7 +66,7 @@ def _get(url: str, timeout: int = 8) -> dict:
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             req = urllib.request.Request(url, headers={"User-Agent": "MEOW-SEC/1.0"})
-            with urllib.request.urlopen(req, timeout=timeout, context=ctx, encoding="utf-8") as resp:
+            with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
                 body = resp.read(2000).decode(errors="ignore")
                 return {"status": resp.status, "headers": dict(resp.headers),
                         "body": body, "url": str(resp.url), "ok": True}
@@ -107,15 +107,32 @@ def check_headers(base_url: str) -> tuple:
 
 def check_paths(base_url: str) -> list:
     """Teste les chemins sensibles"""
-    found = []
+    import concurrent.futures
     info(f"Probing {len(JUICY_PATHS)} sensitive paths...")
-    for path in JUICY_PATHS:
+
+    def _probe(path):
         url = base_url + path
         r = _get(url, timeout=5)
         if r["ok"] and r["status"] not in (404, 403, 410):
             sev = "HIGH" if any(x in path for x in [".env", ".git", "config", "backup", "phpinfo"]) else "MEDIUM"
-            found.append((path, str(r["status"]), sev, url))
-            find(f"[{r['status']}] [{CY}]{path}[/]  [{OR}]({sev})[/]")
+            return (path, str(r["status"]), sev, url)
+        return None
+
+    # Run in parallel but collect results in JUICY_PATHS order
+    results_map = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_idx = {executor.submit(_probe, path): i for i, path in enumerate(JUICY_PATHS)}
+        for fut in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[fut]
+            result = fut.result()
+            if result is not None:
+                results_map[idx] = result
+
+    found = []
+    for i in sorted(results_map):
+        entry = results_map[i]
+        found.append(entry)
+        find(f"[{entry[1]}] [{CY}]{entry[0]}[/]  [{OR}]({entry[2]})[/]")
     return found
 
 def check_ssl(host: str) -> list:

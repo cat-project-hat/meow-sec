@@ -103,7 +103,7 @@ class ProxyManager:
 
         for url, fmt in PROXY_SOURCES:
             try:
-                hdrs = {"User-Agent": "MEOW-SEC/1.1"}
+                hdrs = {"User-Agent": "MEOW-SEC/1.5"}
                 if "dstat.st" in url:
                     hdrs = {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

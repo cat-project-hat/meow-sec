@@ -4,6 +4,7 @@ MEOW-SEC :: EMAILSEC — Email Security Checker (SPF / DKIM / DMARC / Spoofing)
 For authorized security testing and CTF challenges only.
 """
 import os, json, re, socket, time
+import concurrent.futures
 from datetime import datetime
 
 from core.ui import (console, ok, err, info, warn, find, show_module_banner,
@@ -102,14 +103,21 @@ def _check_dkim(domain: str, selectors: list = None) -> dict:
     if selectors is None:
         selectors = _COMMON_SELECTORS
 
-    found = []
-    for sel in selectors:
+    def _check_selector(sel):
         name = f"{sel}._domainkey.{domain}"
         records = _txt_records(name)
         for r in records:
             if "v=DKIM1" in r or "p=" in r:
-                found.append({"selector": sel, "record": r.strip('"')})
-                break
+                return {"selector": sel, "record": r.strip('"')}
+        return None
+
+    found = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(_check_selector, sel): sel for sel in selectors}
+        for fut in concurrent.futures.as_completed(futures):
+            result = fut.result()
+            if result is not None:
+                found.append(result)
 
     issues = []
     severity = "OK"
@@ -196,11 +204,19 @@ def _check_dmarc(domain: str) -> dict:
 # ─── BIMI ─────────────────────────────────────────────────────
 
 def _check_bimi(domain: str) -> dict:
-    records = _txt_records(f"default._bimi.{domain}")
+    """Check BIMI TXT record at default._bimi.{domain}"""
+    records = _doh(f"default._bimi.{domain}", "TXT")
     for r in records:
         r_clean = r.strip('"')
-        if r_clean.lower().startswith("v=bimi1"):
-            return {"found": True, "record": r_clean}
+        if "v=BIMI1" in r_clean or r_clean.lower().startswith("v=bimi1"):
+            l_tag = re.search(r'\bl=([^\s;]+)', r_clean, re.I)
+            a_tag = re.search(r'\ba=([^\s;]+)', r_clean, re.I)
+            return {
+                "found": True,
+                "record": r_clean,
+                "logo_url": l_tag.group(1) if l_tag else "",
+                "vmc_url":  a_tag.group(1) if a_tag else "",
+            }
     return {"found": False}
 
 # ─── MX ───────────────────────────────────────────────────────
@@ -319,7 +335,8 @@ def run():
     if dkim["found"]:
         ok(f"DKIM found: {len(dkim['selectors'])} selector(s)")
         for entry in dkim["selectors"]:
-            info(f"  selector={entry['selector']}  →  {entry['record'][:80]}...")
+            rec = entry['record']
+            info(f"  selector={entry['selector']}  →  {rec[:80]}{'...' if len(rec) > 80 else ''}")
     else:
         err("No DKIM selectors found")
     for issue in dkim["issues"]:
@@ -354,12 +371,20 @@ def run():
     console.print()
 
     # ── BIMI ──
-    console.print(f"  [{CY}]→ BIMI (Brand Indicator)[/]")
+    console.print(f"  [{CY}]→ BIMI (Brand Indicators for Message Identification)[/]")
     bimi = _check_bimi(domain)
     if bimi["found"]:
-        ok(f"BIMI found: {bimi['record'][:60]}")
+        if bimi.get("vmc_url"):
+            ok(f"BIMI found with VMC (Verified Mark Certificate) — high email posture")
+            info(f"  Logo : {bimi['logo_url'][:80]}")
+            info(f"  VMC  : {bimi['vmc_url'][:80]}")
+        else:
+            ok(f"BIMI record found (no VMC)")
+            if bimi.get("logo_url"):
+                info(f"  Logo : {bimi['logo_url'][:80]}")
+        console.print(f"  [{DM}]{bimi['record'][:80]}[/]")
     else:
-        info("No BIMI record (optional)")
+        info("No BIMI record (optional — not penalizing)")
 
     console.print()
 
@@ -394,10 +419,10 @@ def run():
          ", ".join(r["host"] for r in mx["records"][:3]),
          "OK" if mx["found"] else "WARN"],
         ["BIMI",  "✓" if bimi["found"] else "—",
-         bimi.get("record", "not configured")[:40],
-         "OK" if bimi["found"] else "INFO"],
+         (("VMC+" if bimi.get("vmc_url") else "") + bimi.get("record", "not configured")[:40]) if bimi["found"] else "not configured",
+         ("OK+VMC" if bimi.get("vmc_url") else "OK") if bimi["found"] else "INFO"],
     ]
-    print_result_table(["Check", "Found", "Record", "Severity"], rows)
+    print_result_table("Email Security Summary", ["Check", "Found", "Record", "Severity"], rows)
 
     report = {
         "domain": domain,

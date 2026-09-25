@@ -42,11 +42,10 @@ SUBDOMAINS = [
 def resolve_sub(sub: str, domain: str, timeout: float = 1.5) -> dict:
     fqdn = f"{sub}.{domain}"
     try:
-        socket.setdefaulttimeout(timeout)
-        ips = [addr[4][0] for addr in socket.getaddrinfo(fqdn, None, socket.AF_INET)]
-        ips = list(set(ips))
+        addrs = socket.getaddrinfo(fqdn, None, socket.AF_INET, socket.SOCK_STREAM, 0, socket.AI_ADDRINFO)
+        ips = list(set(addr[4][0] for addr in addrs))
         return {"sub": sub, "fqdn": fqdn, "ips": ips, "found": True}
-    except Exception:
+    except (socket.gaierror, OSError):
         return {"sub": sub, "fqdn": fqdn, "ips": [], "found": False}
 
 def check_http(fqdn: str) -> str:

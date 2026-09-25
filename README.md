@@ -12,12 +12,12 @@
 
 ### Cat-Themed Offensive Security Toolkit
 
-**Python 3 · Rich TUI · 61 modules · No BS**
+**Python 3 · Rich TUI · 70 modules · No BS**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-brightgreen?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=for-the-badge)](.)
-[![Modules](https://img.shields.io/badge/Modules-61-brightgreen?style=for-the-badge)](.)
-[![Version](https://img.shields.io/badge/Version-1.5-orange?style=for-the-badge)](.)
+[![Modules](https://img.shields.io/badge/Modules-70-brightgreen?style=for-the-badge)](.)
+[![Version](https://img.shields.io/badge/Version-1.7-orange?style=for-the-badge)](.)
 [![License](https://img.shields.io/badge/License-Educational-red?style=for-the-badge)](.)
 [![Proxy](https://img.shields.io/badge/Proxy-Auto--Rotate-yellow?style=for-the-badge)](.)
 [![CF Bypass](https://img.shields.io/badge/Cloudflare-JA3%20Bypass-purple?style=for-the-badge)](.)
@@ -94,7 +94,7 @@ meow-sec/
 │
 ├── data/                ← tous les résultats JSON et logs sont sauvegardés ici
 │
-└── modules/             ← 61 modules, un fichier = un outil
+└── modules/             ← 70 modules, un fichier = un outil
 ```
 
 ---
@@ -256,11 +256,38 @@ La reconnaissance est la première étape de tout pentest. On collecte un maximu
 ---
 
 #### `[61]` PHONELOOKUP — Phone Number OSINT
-**Ce qu'il fait** : Normalise n'importe quel format de numéro en E.164, identifie le pays et les opérateurs connus, détermine le type de ligne (mobile/fixe/numéro spécial) avec des heuristiques par pays (France, UK, Allemagne, Inde, Chine...), tente un HLR lookup et génère 10 liens OSINT directs (Truecaller, WhatsApp, Telegram, SpyDialer...).
+**Ce qu'il fait** : Normalise n'importe quel format de numéro en E.164, identifie le pays et les opérateurs connus (table ARCEP offline pour la France), détermine le type de ligne (mobile/fixe/numéro spécial), scrape les annuaires inverses pour le propriétaire, interroge les bases de spam (Tellows, LesArnaques, CCM), vérifie la présence WhatsApp/Telegram, et génère 10 liens OSINT directs + 8 dorks Google/Bing/Yandex. Aucune clé API.
 
-**Quand l'utiliser** : Pour identifier l'origine d'un numéro inconnu dans un contexte OSINT, vérifier si un numéro reçu en pentest social est légitime, ou constituer un dossier OSINT sur un individu en partant d'un numéro de téléphone.
+**Quand l'utiliser** : Pour identifier l'origine d'un numéro inconnu, vérifier si un numéro reçu en pentest social est légitime, ou constituer un dossier OSINT sur un individu en partant de son numéro de téléphone (OSINT offensif, investigation, red team social engineering).
 
-**Retourne** : Pays, opérateur, type de ligne, résultats HLR, liens OSINT ouverts.
+**Retourne** : Pays, opérateur réseau d'origine (ARCEP) + opérateur actuel (Tellows), type de ligne, propriétaire potentiel, score spam, présence WhatsApp/Telegram, 10 liens OSINT, 8 dorks.
+
+---
+
+#### `[64]` EXIF — Image EXIF / GPS OSINT
+**Ce qu'il fait** : Extrait les métadonnées EXIF de fichiers image (JPEG, TIFF, PNG) — coordonnées GPS converties en degrés décimaux avec lien Google Maps direct, appareil photo (fabricant + modèle), logiciel utilisé, dates, auteur, copyright. Fonctionne sans dépendance externe (parser binaire natif du segment APP1 JPEG) et utilise Pillow si disponible pour un parsing plus complet. Supporte 4 modes : fichier local, URL, scraping d'une page web (toutes les images), dossier batch.
+
+**Quand l'utiliser** : En OSINT sur des photos publiées en ligne — une photo prise avec un smartphone non anonymisé contient souvent les coordonnées GPS exactes du lieu de prise de vue. Aussi utile pour trouver des métadonnées d'auteur dans des fichiers internes exposés, ou pour classifier les risques dans une fuite de documents images.
+
+**Retourne** : Coordonnées GPS + lien Maps, appareil, logiciel, auteur, dates, niveau de risque (CRITICAL / HIGH / MEDIUM / LOW / NONE).
+
+---
+
+#### `[67]` SUBBRUTE — Subdomain Brute Force
+**Ce qu'il fait** : Énumération agressive de sous-domaines avec une wordlist intégrée de 200+ entrées organisées en 12 catégories (core, dev/staging, CI/DevOps, services cloud, infra/DB, auth/IAM, monitoring, e-commerce, support, mobile, etc.), génération de permutations (`dev-target`, `target-staging`), détection de wildcard DNS (évite les faux positifs), résolution DNS parallèle (`×50 workers`) et vérification HTTP de chaque résultat pour capturer le status code et le titre de la page.
+
+**Quand l'utiliser** : Quand CATNAP n'a pas suffi ou quand on veut couvrir une surface plus large. 4 modes : rapide (60 mots), complet (200+), complet + permutations, et wordlist custom. La détection wildcard évite d'être noyé dans des faux positifs sur les domaines qui résolvent tout.
+
+**Retourne** : Sous-domaines résolus avec IPs, status HTTP, titre de page.
+
+---
+
+#### `[65]` FAVICON — Favicon Hash Fingerprinting
+**Ce qu'il fait** : Récupère le favicon d'un site web (via `<link rel="icon">` HTML ou fallback sur `/favicon.ico`), calcule le **hash MurmurHash3 32-bit** au format Shodan (implémentation pure Python, pas de dépendance), compare ce hash contre une base de 35+ technologies connues (Apache, Nginx, Jenkins, Grafana, GitLab, Jira, Confluence, WordPress, Drupal, VMware, Fortinet, Cisco, pfSense, Keycloak, Portainer, Zabbix...) et génère les liens de recherche Shodan et FOFA. En mode multi-domaines, compare les hashes pour détecter une infrastructure partagée.
+
+**Quand l'utiliser** : En recon passive pour identifier rapidement la technologie d'une cible depuis son favicon (sans déclencher de scan actif). Un hash Shodan permet aussi de trouver toutes les instances de la même technologie exposées sur Internet — utile pour trouver des panneaux d'administration oubliés ou des instances internes exposées par erreur. Très utilisé en bug bounty pour l'énumération d'assets.
+
+**Retourne** : Hash MurmurHash3, technologie identifiée, lien Shodan FavIcon Search, lien FOFA.
 
 ---
 
@@ -432,12 +459,66 @@ L'exploitation web couvre toutes les vulnérabilités d'application : injection 
 
 ---
 
+#### `[68]` HOSTHEADER — Host Header Injection
+**Ce qu'il fait** : Teste 4 classes d'attaques via le header HTTP `Host`. **Password reset poisoning** : envoie des requêtes avec des hosts malveillants (`attacker.com`, CRLF injection) + 6 headers alternatifs (`X-Forwarded-Host`, `X-Host`, `Forwarded:`...) et détecte si `attacker.com` se retrouve dans les liens de reset générés. **Virtual host discovery** : teste 11 préfixes (`admin`, `internal`, `dev`, `backend`...) sur l'IP résolue et signale les vhosts qui retournent un contenu différent du défaut. **Ambiguous Host** : double header, Host avec espace, @ trick. **Host Header SSRF** : teste les endpoints cloud metadata comme valeur de Host.
+
+**Quand l'utiliser** : Sur toutes les apps avec "Forgot password". Le password reset poisoning est fréquent et critique — si le lien de reset est généré depuis le header Host, un attaquant peut le faire pointer vers son propre serveur et voler le token. La découverte de vhosts révèle souvent des panels internes accessibles depuis l'extérieur sur la même IP.
+
+**Retourne** : Payloads Host réfléchis, vhosts actifs, headers qui altèrent le comportement.
+
+---
+
+#### `[69]` OPENREDIR — Open Redirect Scanner
+**Ce qu'il fait** : Scanner dédié aux open redirects — plus complet que HISS. Teste automatiquement 25 paramètres suspects (`url`, `redirect`, `next`, `return_to`, `goto`, `callback`, `jump_url`...) avec 26 payloads de bypass couvrant proto-relative (`//evil.com`), backslash, double-encoding, URL avec credentials, CRLF injection, Unicode, data URI, fragment bypass, null byte, IP hexadécimale. Détecte les redirections dans `Location`, `meta-refresh`, et `window.location` JS. Mode FUZZ pour URL avec token à remplacer.
+
+**Quand l'utiliser** : Sur les apps avec des flows de redirection après login/logout, OAuth callbacks, ou paramètres de navigation. Un open redirect + phishing = page de login légitime qui redirige vers une copie malveillante — très courant en bug bounty, souvent noté P3/P4 mais combinable avec d'autres vecteurs.
+
+**Retourne** : Paramètres vulnérables, payloads efficaces, niveau CONFIRMED / POTENTIAL.
+
+---
+
+#### `[70]` XSSTESTER — XSS Tester (Full)
+**Ce qu'il fait** : Testeur XSS complet avec 50+ payloads classés par contexte d'injection. **Détection de contexte automatique** : identifie si la valeur est réfléchie dans le body HTML, un attribut, une chaîne JavaScript, ou une URL, puis sélectionne les payloads adaptés. **4 jeux de payloads** : HTML basic (15), bypass WAF (15, incluant base64 eval, template literal, setTimeout, unicode escape), attribut break (10), JS string escape (10). **Crawl automatique** : extrait tous les formulaires GET/POST et paramètres des liens, suit jusqu'à 20 URLs linkées. **DOM XSS** : analyse statique du JavaScript — cherche 17 sinks dangereux (`innerHTML`, `eval`, `document.write`, `location.href`...) dans le voisinage de 10 sources taintées (`location.hash`, `location.search`, `document.referrer`...).
+
+**Quand l'utiliser** : En mode 1 (auto) sur n'importe quelle app web pour un premier sweep XSS. En mode 2 (manuel) après avoir identifié un paramètre suspect avec FUZZ. En mode 3 (DOM only) sur des apps React/Vue/Angular pour l'analyse statique sans traffic. HISS détecte les XSS de base — XSSTESTER les confirme avec des payloads de bypass et le contexte exact.
+
+**Retourne** : Paramètres vulnérables, payload efficace, contexte d'injection, sinks DOM dangereux.
+
+---
+
 #### `[56]` LDAPI — LDAP Injection
 **Ce qu'il fait** : Teste 15 payloads d'auth bypass LDAP (`*)(uid=*`, `admin)(&`, `*))%00`, variantes hex...) sur des formulaires de login, compare les réponses pour détecter une injection blind, et tente d'énumérer 14 usernames courants (admin, root, ldap, service...) en exploitant le comportement différentiel.
 
 **Quand l'utiliser** : Sur des apps d'entreprise avec authentification centralisée (Active Directory, OpenLDAP) — portails VPN, intranets, apps RH. Les apps Java/PHP qui font des recherches LDAP directement à partir de l'input utilisateur sont souvent vulnérables.
 
 **Retourne** : Payloads bypass confirmés, utilisateurs existants détectés.
+
+---
+
+#### `[66]` PORTS2CVE — Port → CVE Correlator
+**Ce qu'il fait** : Prend la sortie JSON d'un scan CLAW et corrèle automatiquement chaque service/bannière avec des CVEs connus via l'API NVD NIST v2 et CIRCL.lu (sans clé). Parse 18 patterns de bannières (`Apache/2.4.49`, `OpenSSH_7.4`, `nginx/1.18.0`...) et fallback port→produit pour les 16 ports courants. Filtre uniquement CVSS >= 7.0 (HIGH + CRITICAL), déduplique NVD + CIRCL, respecte le rate-limiting NVD. Affiche CRITICAL en rouge, HIGH en orange.
+
+**Quand l'utiliser** : Immédiatement après un CLAW pour savoir si les services exposés ont des CVEs exploitables publics. Au lieu de chercher manuellement "Apache 2.4.49 CVE", PORTS2CVE fait le travail en une seule commande et sort directement les exploits candidats — indispensable pour accélérer un pentest d'infrastructure.
+
+**Retourne** : Table Port | Service | Version | CVE ID | CVSS | Sévérité | Description.
+
+---
+
+#### `[62]` SSRF — Server-Side Request Forgery Tester
+**Ce qu'il fait** : Détecte et exploite les vulnérabilités SSRF en 5 modes. **Détection classique** : auto-détecte les paramètres suspects (`url`, `redirect`, `webhook`, `callback`, `proxy`, `image`, `src`...), injecte 8 variantes loopback/internes et compare les réponses avec le baseline. **Cloud metadata** : injecte les 11 endpoints de métadonnées cloud (AWS IMDSv1/v2, GCP, Azure, DigitalOcean, Oracle Cloud) pour détecter un accès aux credentials IAM. **Blind SSRF** : envoie des payloads horodatés vers un callback URL (webhook.site, interactsh, Burp Collaborator). **Bypass** : 10 encodages alternatifs (octal `0177.0.0.1`, hex `0x7f000001`, décimal `2130706433`, nip.io, @ trick, IPv6). **Header injection** : 10 headers de routing (`X-Forwarded-For`, `X-Real-IP`, `X-Custom-IP-Authorization`...) avec détection de bypass 401/403.
+
+**Quand l'utiliser** : Sur tout endpoint qui prend une URL en paramètre (webhooks, import de fichiers distants, scraping, convertisseurs). Les SSRF vers AWS metadata (`169.254.169.254`) permettent souvent de voler des credentials IAM et d'escalader vers un accès AWS complet — c'est le chemin d'escalade le plus commun en cloud pentesting et bug bounty.
+
+**Retourne** : Paramètres vulnérables, URL de métadonnées accessibles, bypass confirmés, payloads efficaces.
+
+---
+
+#### `[63]` APITEST — REST API Security Tester
+**Ce qu'il fait** : Audit de sécurité complet d'une API REST en 7 contrôles automatisés. **Découverte** : 30 endpoints communs testés en parallèle (`/api/v1/`, `/swagger.json`, `/api/admin/`, `/api/me`...). **Mass assignment** : injecte des champs privilégiés dans les body POST/PUT (`role: admin`, `isAdmin: true`, `balance: 99999`) et détecte leur réflexion. **Method tampering** : teste HEAD/OPTIONS/TRACE/PATCH/PUT/DELETE sur chaque endpoint, signale les méthodes 200 inattendues. **Auth bypass** : 8 variantes de token cassé (`null`, `undefined`, vide, `Bearer 0`), X-Original-URL/X-Rewrite-URL, confusion Content-Type. **Rate limiting** : 20 requêtes rapides — pas de 429 = pas de rate limit. **API versioning** : downgrade `v2→v1` pour trouver des versions plus anciennes avec moins de sécurité. **Verbose errors** : requêtes malformées pour déclencher des stack traces révélatrices.
+
+**Quand l'utiliser** : Lors de tout pentest ou bug bounty sur une API REST. Le mass assignment est l'une des vulnérabilités les plus fréquentes sur les APIs Node.js/Express — les frameworks qui mappent automatiquement le body JSON vers un modèle de données acceptent souvent des champs non prévus. Le versioning downgrade trouve régulièrement des endpoints v1 oubliés sans auth.
+
+**Retourne** : Endpoints actifs, champs mass-assignables, méthodes non autorisées, bypasses d'auth confirmés, absence de rate limit, versions dépréciées accessibles.
 
 ---
 
@@ -736,6 +817,8 @@ Partagés par PHISH et TRACK — le même gestionnaire `core/tunnel.py` :
 
 | Version | Modules | Ajouts principaux |
 |---------|---------|-------------------|
+| **v1.7** | 70 | PORTS2CVE · SUBBRUTE · HOSTHEADER · OPENREDIR · XSSTESTER + PDF report · BIMI check · loot diff · GreyNoise |
+| **v1.6** | 65 | SSRF · APITEST · EXIF · FAVICON + optimisations perf (DKIM/purr parallèles) |
 | **v1.5** | 61 | URLSPOOF · MAILSPOOF · IPLOOKUP · PHONELOOKUP |
 | **v1.4** | 57 | IDOR · UPLOAD · RACE · LDAPI · EMAILSEC |
 | **v1.3** | 52 | SQLI · CMDI · NOSQLI · ORMI · WPSCAN · FRONTSCAN |
@@ -759,8 +842,8 @@ Partagés par PHISH et TRACK — le même gestionnaire `core/tunnel.py` :
 
 ```
    /\_/\
-  ( o.o )   MEOW-SEC v1.5 // BY CAT-PROJECT-HAT // 2026
-   > ^ <    61 modules · Python 3 · Rich TUI
+  ( o.o )   MEOW-SEC v1.7 // BY CAT-PROJECT-HAT // 2026
+   > ^ <    70 modules · Python 3 · Rich TUI
   /|   |\   Stay in the shadows. Stay curious.
  (_|   |_)
 ```

@@ -7,13 +7,14 @@ By cat-project-hat // 2026
 For authorized penetration testing, CTF challenges and security research only.
 Unauthorized use is illegal. Use only on systems you own or have explicit written permission to test.
 
-61 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
+70 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
             PROXYCAT · PAWS · MEWHASH · CODEC · PAYLOAD · NETKIT · STRESS · LOOT
             REVSHELL · WAF · JWTCAT · REPORT · BRUTE · CMS · SSLSCAN · PHISH
             CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA
             SMUGGLE · XXE · GITDUMP · SSTI · SECRETSCAN · CACHE · OAUTH · DESERIA · PROTO
             BREACH · SHODAN · TRACK · SQLI · CMDI · NOSQLI · ORMI · WPSCAN · FRONTSCAN
             IDOR · UPLOAD · RACE · LDAPI · EMAILSEC · URLSPOOF · MAILSPOOF · IPLOOKUP · PHONELOOKUP
+            SSRF · APITEST · EXIF · FAVICON · PORTS2CVE · SUBBRUTE · HOSTHEADER · OPENREDIR · XSSTESTER
 """
 
 import sys
@@ -331,6 +332,33 @@ def dispatch(choice: str):
     elif choice in ("61", "phonelookup", "phone", "phoneosint"):
         from modules import phonelookup; phonelookup.run()
 
+    elif choice in ("62", "ssrf", "serverssrf"):
+        from modules import ssrf; ssrf.run()
+
+    elif choice in ("63", "apitest", "api", "restapi"):
+        from modules import apitest; apitest.run()
+
+    elif choice in ("64", "exif", "metadata", "exifosint"):
+        from modules import exif; exif.run()
+
+    elif choice in ("65", "favicon", "favhash", "faviconhash"):
+        from modules import favicon; favicon.run()
+
+    elif choice in ("66", "ports2cve", "p2cve", "portscve"):
+        from modules import ports2cve; ports2cve.run()
+
+    elif choice in ("67", "subbrute", "subdbrute", "subbf"):
+        from modules import subbrute; subbrute.run()
+
+    elif choice in ("68", "hostheader", "hostinject", "vhost"):
+        from modules import hostheader; hostheader.run()
+
+    elif choice in ("69", "openredir", "redirect", "redir"):
+        from modules import openredir; openredir.run()
+
+    elif choice in ("70", "xsstester", "xss", "xssfull"):
+        from modules import xsstester; xsstester.run()
+
     elif choice in ("0", "exit", "quit", "q"):
         return False
 
@@ -456,6 +484,32 @@ def main():
             "phonelookup": "61",
             "phone":       "61",
             "phoneosint":  "61",
+            "ssrf":        "62",
+            "serverssrf":  "62",
+            "apitest":     "63",
+            "api":         "63",
+            "restapi":     "63",
+            "exif":        "64",
+            "metadata":    "64",
+            "exifosint":   "64",
+            "favicon":     "65",
+            "favhash":     "65",
+            "faviconhash": "65",
+            "ports2cve":   "66",
+            "p2cve":       "66",
+            "portscve":    "66",
+            "subbrute":    "67",
+            "subdbrute":   "67",
+            "subbf":       "67",
+            "hostheader":  "68",
+            "hostinject":  "68",
+            "vhost":       "68",
+            "openredir":   "69",
+            "redirect":    "69",
+            "redir":       "69",
+            "xsstester":   "70",
+            "xss":         "70",
+            "xssfull":     "70",
         }
         mod = args[0].lower()
         if mod in module_map:
@@ -540,7 +594,11 @@ def _print_help():
   race      Race condition            ldap      LDAP injection
   emailsec  SPF/DKIM/DMARC check     urlspoof  URL homograph/typosquat
   mailspoof Email spoofing            iplookup  IP/domain intel (GeoIP)
-  phone     Phone number OSINT
+  phone     Phone number OSINT        ssrf      SSRF tester
+  apitest   REST API security         exif      Image EXIF/GPS OSINT
+  favicon   Favicon hash fingerprint  ports2cve Port→CVE correlator
+  subbrute  Subdomain brute force     hostheader Host Header injection
+  openredir Open redirect scanner     xss       XSS tester (full)
 
 [{G1}]Proxy:[/]
   Run PROXYCAT first to download & validate proxies.

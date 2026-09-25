@@ -19,7 +19,7 @@ BANNER_CAT = r"""
  /  🔴   🔴  \
 ( ==  ^  == )
  )  MEOW   (
-(  SEC v1.0 )
+(  SEC v1.5 )
  (_________)"""
 
 CAT_HACKER = r"""

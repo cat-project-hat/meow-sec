@@ -60,7 +60,7 @@ def _dmarc_policy(domain: str) -> str:
         if "v=DMARC1" in txt:
             m = re.search(r"\bp=(\w+)", txt, re.I)
             return m.group(1).lower() if m else "none"
-    return "none"
+    return "missing"
 
 # ─── SPOOFABILITY CHECK ───────────────────────────────────────
 
@@ -78,10 +78,10 @@ def _check_spoofable(domain: str) -> dict:
         elif spf == "~all": reason.append("SPF ~all (softfail, often delivered)")
         elif spf == "?all": reason.append("SPF ?all (neutral, no enforcement)")
 
-    if dmarc in ("none", "none_missing"):
+    if dmarc in ("none", "missing"):
         spoofable = True
-        if dmarc == "none": reason.append("DMARC p=none (no enforcement)")
-        else: reason.append("No DMARC record")
+        if dmarc == "none":    reason.append("DMARC p=none (no enforcement)")
+        else:                  reason.append("No DMARC record")
 
     return {
         "domain":    domain,
@@ -310,7 +310,8 @@ def run():
         smtp_port_s = ask_choice("SMTP port [default: 587]") or "587"
         smtp_port = int(smtp_port_s) if smtp_port_s.isdigit() else 587
         smtp_user = ask_choice("SMTP username (your email)") or ""
-        smtp_pass = ask_choice("SMTP password") or ""
+        from rich.prompt import Prompt as _Prompt
+        smtp_pass = _Prompt.ask(f"[{G1}]◈ SMTP password[/]", password=True).strip() or ""
         from_addr = ask_choice(f"From: address (spoof this — e.g. security@{sender_domain})") or ""
         reply_to  = ask_choice("Reply-To: (attacker mailbox, or Enter to skip)") or ""
         to_addr   = ask_choice("Send to (target email address)") or ""

@@ -166,16 +166,31 @@ def _whois_rdap(ip: str) -> dict:
     if d:
         name  = d.get("name","?")
         hdl   = d.get("handle","?")
-        country = ""
-        for v in d.get("country","") or []:
-            country = v; break
+        country = d.get("country", "")
         entities = d.get("entities",[])
         org = ""
         for e in entities:
             if "registrant" in e.get("roles",[]) or "technical" in e.get("roles",[]):
-                org = e.get("vcardArray",[[]])[1][1][3] if e.get("vcardArray") else ""
+                try:
+                    org = e["vcardArray"][1][1][3]
+                except (IndexError, KeyError, TypeError):
+                    org = ""
                 break
         return {"provider":"rdap", "name": name, "handle": hdl, "country": country, "org": org}
+    return {}
+
+def _greynoise(ip: str) -> dict:
+    """GreyNoise community API — no key required."""
+    d = _req(f"https://api.greynoise.io/v3/community/{ip}")
+    if d and d.get("ip"):
+        return {
+            "provider": "greynoise",
+            "noise":     d.get("noise", False),      # True = internet scanner connu
+            "riot":      d.get("riot", False),        # True = service légitime connu (Google, Cloudflare...)
+            "classification": d.get("classification", "unknown"),  # benign/malicious/unknown
+            "name":      d.get("name", ""),           # nom de l'organisation
+            "link":      d.get("link", ""),
+        }
     return {}
 
 # ─── BATCH CIDR ───────────────────────────────────────────────
@@ -250,6 +265,18 @@ def _print_abuse(d: dict):
     if d.get("is_tor"): warn("  Tor exit node")
     if d.get("is_whitelist"): ok("  Whitelisted")
 
+def _print_greynoise(d: dict):
+    if not d: return
+    console.print(f"\n  [{CY}]── GreyNoise ──[/]")
+    if d.get("riot"):
+        ok(f"  RIOT: {d.get('name','')} — known legitimate service")
+    elif d.get("noise"):
+        cls = d.get("classification","unknown")
+        color = RD if cls == "malicious" else OR if cls == "unknown" else G1
+        warn(f"  Noise: [{color}]{cls}[/] — {d.get('name','internet scanner')}")
+    else:
+        info(f"  Not seen in GreyNoise mass-scan data")
+
 # ─── SAVE ─────────────────────────────────────────────────────
 
 def _save(target: str, data: dict):
@@ -295,16 +322,25 @@ def run():
 
         all_data = {"target": target, "ip": ip}
 
-        geo   = _ip_api(ip)
-        geo2  = _ipinfo(ip)
-        shod  = _shodan_lite(ip)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as _pool:
+            _f_geo  = _pool.submit(_ip_api, ip)
+            _f_geo2 = _pool.submit(_ipinfo, ip)
+            _f_shod = _pool.submit(_shodan_lite, ip)
+            _f_rdap = _pool.submit(_whois_rdap, ip)
+            _f_rdns = _pool.submit(_reverse_dns, ip)
+            _f_gn   = _pool.submit(_greynoise, ip)
+            geo  = _f_geo.result()
+            geo2 = _f_geo2.result()
+            shod = _f_shod.result()
+            rdap = _f_rdap.result()
+            rdns = _f_rdns.result()
+            gn   = _f_gn.result()
         abuse = _abuseipdb(ip)
-        rdap  = _whois_rdap(ip)
-        rdns  = _reverse_dns(ip)
 
         _print_geo(geo or geo2)
         _print_shodan(shod)
         _print_abuse(abuse)
+        _print_greynoise(gn)
 
         if rdns:
             console.print(f"\n  [{CY}]── Reverse DNS ──[/]")
@@ -320,7 +356,7 @@ def run():
         if lat and lon:
             console.print(f"\n  [{DM}]Maps: https://maps.google.com/maps?q={lat},{lon}[/]")
 
-        all_data.update({"geo": geo, "shodan": shod, "abuse": abuse, "rdap": rdap, "rdns": rdns})
+        all_data.update({"geo": geo, "shodan": shod, "abuse": abuse, "rdap": rdap, "rdns": rdns, "greynoise": gn})
         _save(target, all_data)
 
     elif mode == "2":

@@ -328,7 +328,7 @@ def run():
 
     console.print()
     if all_results:
-        cat_talk(CAT_FOUND, f"{len(all_results)} spoofing variants generated for {sld}{tld}")
+        cat_talk(CAT_FOUND, f"{len(all_results)} spoofing variants generated for {sld}{tld}", G1)
         _save(target, all_results)
     else:
-        cat_talk(CAT_SCAN, "No variants generated.")
+        cat_talk(CAT_SCAN, "No variants generated.", DM)

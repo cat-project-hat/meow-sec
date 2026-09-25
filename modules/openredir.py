@@ -242,7 +242,7 @@ def run(target: str = None):
 
     console.print(f"  [{G1}][1][/] Auto-scan — test {len(_REDIR_PARAMS)} common parameters on a base URL")
     console.print(f"  [{G1}][2][/] FUZZ mode  — test a URL with FUZZ placeholder")
-    mode = ask_choice("Mode", "1")
+    mode = ask_choice("Mode") or "1"
     console.print()
 
     all_findings = []
@@ -306,7 +306,6 @@ def run(target: str = None):
             "Open Redirect Findings",
             ["PARAM", "LEVEL", "PAYLOAD", "STATUS", "DETAIL"],
             rows,
-            color_col=1,
         )
         if confirmed:
             warn(f"[{RD}]{len(confirmed)} CONFIRMED[/] open redirect(s) found!")

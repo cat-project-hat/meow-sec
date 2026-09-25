@@ -7,14 +7,14 @@ By cat-project-hat // 2026
 For authorized penetration testing, CTF challenges and security research only.
 Unauthorized use is illegal. Use only on systems you own or have explicit written permission to test.
 
-70 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
+71 modules: CLAW · PURR · SCRATCH · WHISKER · HISS · CATNAP · GHOST · OSINT+
             PROXYCAT · PAWS · MEWHASH · CODEC · PAYLOAD · NETKIT · STRESS · LOOT
             REVSHELL · WAF · JWTCAT · REPORT · BRUTE · CMS · SSLSCAN · PHISH
             CORS · LFI · FUZZ · CVE · HARVEST · TAKEOVER · BUCKET · SPRAY · GRAPHQL · 2FA
             SMUGGLE · XXE · GITDUMP · SSTI · SECRETSCAN · CACHE · OAUTH · DESERIA · PROTO
             BREACH · SHODAN · TRACK · SQLI · CMDI · NOSQLI · ORMI · WPSCAN · FRONTSCAN
             IDOR · UPLOAD · RACE · LDAPI · EMAILSEC · URLSPOOF · MAILSPOOF · IPLOOKUP · PHONELOOKUP
-            SSRF · APITEST · EXIF · FAVICON · PORTS2CVE · SUBBRUTE · HOSTHEADER · OPENREDIR · XSSTESTER
+            SSRF · APITEST · EXIF · FAVICON · PORTS2CVE · SUBBRUTE · HOSTHEADER · OPENREDIR · XSSTESTER · ARCHIVEBRUTE
 """
 
 import sys
@@ -359,6 +359,9 @@ def dispatch(choice: str):
     elif choice in ("70", "xsstester", "xss", "xssfull"):
         from modules import xsstester; xsstester.run()
 
+    elif choice in ("71", "archivebrute", "zipbrute", "zipcrack", "archivecrack"):
+        from modules import archivebrute; archivebrute.run()
+
     elif choice in ("0", "exit", "quit", "q"):
         return False
 
@@ -507,9 +510,13 @@ def main():
             "openredir":   "69",
             "redirect":    "69",
             "redir":       "69",
-            "xsstester":   "70",
-            "xss":         "70",
-            "xssfull":     "70",
+            "xsstester":    "70",
+            "xss":          "70",
+            "xssfull":      "70",
+            "archivebrute": "71",
+            "zipbrute":     "71",
+            "zipcrack":     "71",
+            "archivecrack": "71",
         }
         mod = args[0].lower()
         if mod in module_map:
@@ -599,6 +606,7 @@ def _print_help():
   favicon   Favicon hash fingerprint  ports2cve Port→CVE correlator
   subbrute  Subdomain brute force     hostheader Host Header injection
   openredir Open redirect scanner     xss       XSS tester (full)
+  zipbrute  ZIP/RAR/7z/PDF bruteforce
 
 [{G1}]Proxy:[/]
   Run PROXYCAT first to download & validate proxies.

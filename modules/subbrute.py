@@ -170,7 +170,7 @@ def run(target: str = None):
     console.print(f"  [{G1}][2][/] Full scan         ({len(WORDLIST)} subdomains, built-in list)")
     console.print(f"  [{G1}][3][/] Full + permutations  ({len(WORDLIST)} words + generated permutations)")
     console.print(f"  [{G1}][4][/] Custom file")
-    mode = ask_choice("Mode", "2")
+    mode = ask_choice("Mode") or "2"
     console.print()
 
     if mode == "1":

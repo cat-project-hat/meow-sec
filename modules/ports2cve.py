@@ -246,7 +246,7 @@ def run(target: str = None):
 
     console.print(f"  [{G1}][1][/] Load CLAW JSON scan file  (data/claw_*.json)")
     console.print(f"  [{G1}][2][/] Enter ports/services manually")
-    mode = ask_choice("Mode", "1")
+    mode = ask_choice("Mode") or "1"
     console.print()
 
     ports_data = []  # list of {"port": N, "service": "...", "banner": "..."}

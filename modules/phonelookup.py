@@ -634,4 +634,4 @@ def run():
         "ts": datetime.now().isoformat(),
     }
     _save(e164, all_data)
-    cat_talk(CAT_FOUND if parsed["valid"] else CAT_SCAN, f"Phone lookup complete: {e164}")
+    cat_talk(CAT_FOUND if parsed["valid"] else CAT_SCAN, f"Phone lookup complete: {e164}", G1)

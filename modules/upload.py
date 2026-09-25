@@ -241,10 +241,10 @@ def run():
 
     console.print()
     if findings:
-        cat_talk(CAT_FOUND, f"{len(findings)} upload bypass(es) found!")
+        cat_talk(CAT_FOUND, f"{len(findings)} upload bypass(es) found!", G1)
         rows = [[f["severity"], f["filename"], f["content_type"], str(f["status"]), f["exec"] or "—"]
                 for f in findings]
         print_result_table(["Severity", "Filename", "MIME", "Status", "Exec"], rows)
         _save(url, findings)
     else:
-        cat_talk(CAT_SCAN, "All upload vectors were blocked.")
+        cat_talk(CAT_SCAN, "All upload vectors were blocked.", DM)

@@ -250,10 +250,10 @@ def run():
 
     console.print()
     if all_findings:
-        cat_talk(CAT_FOUND, f"Race condition found in {len(all_findings)}/{n_rounds} round(s)!")
+        cat_talk(CAT_FOUND, f"Race condition found in {len(all_findings)}/{n_rounds} round(s)!", G1)
         rows = [[f["scenario"], str(f["round"]), f["reason"], str(f["threads"])]
                 for f in all_findings]
         print_result_table(["Scenario", "Round", "Reason", "Threads"], rows)
         _save(url, all_findings)
     else:
-        cat_talk(CAT_SCAN, "No race condition detected — try more threads or rounds, or check scenario.")
+        cat_talk(CAT_SCAN, "No race condition detected — try more threads or rounds, or check scenario.", DM)

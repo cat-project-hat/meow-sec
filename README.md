@@ -12,12 +12,12 @@
 
 ### Cat-Themed Offensive Security Toolkit
 
-**Python 3 · Rich TUI · 70 modules · No BS**
+**Python 3 · Rich TUI · 71 modules · No BS**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-brightgreen?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=for-the-badge)](.)
-[![Modules](https://img.shields.io/badge/Modules-70-brightgreen?style=for-the-badge)](.)
-[![Version](https://img.shields.io/badge/Version-1.7-orange?style=for-the-badge)](.)
+[![Modules](https://img.shields.io/badge/Modules-71-brightgreen?style=for-the-badge)](.)
+[![Version](https://img.shields.io/badge/Version-1.8-orange?style=for-the-badge)](.)
 [![License](https://img.shields.io/badge/License-Educational-red?style=for-the-badge)](.)
 [![Proxy](https://img.shields.io/badge/Proxy-Auto--Rotate-yellow?style=for-the-badge)](.)
 [![CF Bypass](https://img.shields.io/badge/Cloudflare-JA3%20Bypass-purple?style=for-the-badge)](.)
@@ -549,6 +549,15 @@ Les outils réseau couvrent les tests sur les couches basses et les services app
 
 ---
 
+#### `[71]` ARCHIVEBRUTE — Archive / File Password Cracker
+**Ce qu'il fait** : Brute force de mot de passe sur des fichiers chiffrés — **ZIP** (natif Python, `extractall`), **RAR** (`rarfile` ou `unrar` CLI), **7z** (`py7zr` ou `7z` CLI), **PDF** (`pikepdf` ou `PyPDF2` ou `qpdf` CLI). Détection automatique du format par magic bytes (`PK\x03\x04`, `Rar!`, `7z\xbc\xaf`, `%PDF`). 3 modes de wordlist : intégrée (200 mots de passe du top rockyou + mots courants français), fichier externe, et attaque par règles/mutations (leetspeak, variantes capitalisées, suffixes 123/2024/!, combinaisons années). Multi-threadé (×8 pour ZIP/PDF, ×4 pour RAR/7z subprocess), stoppe immédiatement dès que le mot de passe est trouvé.
+
+**Quand l'utiliser** : Après avoir récupéré un fichier protégé lors d'un test d'intrusion — backup ZIP, archive RAR de config, PDF confidentiel. Aussi en CTF où les fichiers chiffrés sont un classique. La wordlist intégrée + règles couvre ~80% des mots de passe faibles sans avoir besoin de rockyou.
+
+**Retourne** : Mot de passe trouvé, format détecté, temps écoulé, nombre de mots testés.
+
+---
+
 #### `[21]` BRUTE — HTTP Login Brute Force
 **Ce qu'il fait** : Brute force sur des formulaires HTTP avec auto-détection du formulaire (cherche les champs `password` et `username`), support des tokens CSRF (récupère et rejoue automatiquement le token), authentification Basic, et rotation de proxies.
 
@@ -817,6 +826,7 @@ Partagés par PHISH et TRACK — le même gestionnaire `core/tunnel.py` :
 
 | Version | Modules | Ajouts principaux |
 |---------|---------|-------------------|
+| **v1.8** | 71 | ARCHIVEBRUTE (ZIP · RAR · 7z · PDF) |
 | **v1.7** | 70 | PORTS2CVE · SUBBRUTE · HOSTHEADER · OPENREDIR · XSSTESTER + PDF report · BIMI check · loot diff · GreyNoise |
 | **v1.6** | 65 | SSRF · APITEST · EXIF · FAVICON + optimisations perf (DKIM/purr parallèles) |
 | **v1.5** | 61 | URLSPOOF · MAILSPOOF · IPLOOKUP · PHONELOOKUP |
@@ -842,8 +852,8 @@ Partagés par PHISH et TRACK — le même gestionnaire `core/tunnel.py` :
 
 ```
    /\_/\
-  ( o.o )   MEOW-SEC v1.7 // BY CAT-PROJECT-HAT // 2026
-   > ^ <    70 modules · Python 3 · Rich TUI
+  ( o.o )   MEOW-SEC v1.8 // BY CAT-PROJECT-HAT // 2026
+   > ^ <    71 modules · Python 3 · Rich TUI
   /|   |\   Stay in the shadows. Stay curious.
  (_|   |_)
 ```

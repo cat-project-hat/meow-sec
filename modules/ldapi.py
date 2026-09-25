@@ -247,11 +247,11 @@ def run():
 
     console.print()
     if all_findings:
-        cat_talk(CAT_FOUND, f"{len(all_findings)} LDAP injection finding(s)!")
+        cat_talk(CAT_FOUND, f"{len(all_findings)} LDAP injection finding(s)!", G1)
         rows = [[f["type"], f.get("payload", f.get("username", "?")), str(f.get("status", "?")),
                  f.get("desc", f.get("type", "?"))]
                 for f in all_findings]
         print_result_table(["Type", "Payload / User", "Status", "Detail"], rows)
         _save(url, all_findings)
     else:
-        cat_talk(CAT_SCAN, "No LDAP injection detected (may not be LDAP-backed, or correctly sanitised).")
+        cat_talk(CAT_SCAN, "No LDAP injection detected (may not be LDAP-backed, or correctly sanitised, DM).", DM)

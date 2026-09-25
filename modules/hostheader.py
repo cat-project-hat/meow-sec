@@ -321,7 +321,7 @@ def run(target: str = None):
     console.print(f"  [{G1}][3][/] Ambiguous Host Header")
     console.print(f"  [{G1}][4][/] Host Header SSRF")
     console.print(f"  [{G1}][5][/] Full scan (all tests)")
-    mode = ask_choice("Mode", "5")
+    mode = ask_choice("Mode") or "5"
     console.print()
 
     all_findings = []
@@ -349,7 +349,6 @@ def run(target: str = None):
             "Host Header Vulnerabilities",
             ["VECTOR", "SEV", "PAYLOAD", "STATUS", "NOTE"],
             rows,
-            color_col=1,
         )
         _sev_map = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1, "INFO": 0}
         worst = max(all_findings, key=lambda x: _sev_map.get(x["sev"], 0))

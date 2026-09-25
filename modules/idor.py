@@ -311,7 +311,7 @@ def run():
 
     console.print()
     if all_findings:
-        cat_talk(CAT_FOUND, f"{len(all_findings)} IDOR finding(s) detected!")
+        cat_talk(CAT_FOUND, f"{len(all_findings)} IDOR finding(s) detected!", G1)
         rows = [
             [f["type"], f.get("url", url), f.get("id", "?"), str(f.get("status", "?")), str(f.get("size", "?"))]
             for f in all_findings
@@ -319,4 +319,4 @@ def run():
         print_result_table(["Type", "URL", "ID", "Status", "Size"], rows)
         _save(url, all_findings)
     else:
-        cat_talk(CAT_SCAN, "No IDOR found — may need valid session cookies or different IDs.")
+        cat_talk(CAT_SCAN, "No IDOR found — may need valid session cookies or different IDs.", DM)

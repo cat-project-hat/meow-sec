@@ -366,10 +366,10 @@ def run():
         console.print(f"\n  [{G1}]Scanning {cidr}...[/]\n")
         results = _scan_cidr(cidr)
         if results:
-            cat_talk(CAT_FOUND, f"{len(results)} hosts found in {cidr}")
+            cat_talk(CAT_FOUND, f"{len(results)} hosts found in {cidr}", G1)
             _save(cidr, {"cidr": cidr, "hosts": results})
         else:
-            cat_talk(CAT_SCAN, "No hosts responded.")
+            cat_talk(CAT_SCAN, "No hosts responded.", DM)
 
     elif mode == "3":
         fpath = ask_target("File path (one IP or domain per line)")

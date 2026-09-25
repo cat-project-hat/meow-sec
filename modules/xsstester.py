@@ -350,10 +350,10 @@ def test_form_xss(base_url: str, form: dict) -> list:
 
 # ─── FORM CRAWLER ────────────────────────────────────────────
 
-def crawl_forms(url: str) -> list:
+def crawl_forms(url: str) -> dict:
     """Extract all forms and GET-linked URLs with parameters from the page."""
     if not HAS_REQUESTS:
-        return []
+        return {"forms": [], "links": []}
     try:
         from html.parser import HTMLParser
 
@@ -507,7 +507,7 @@ def run(target: str = None):
     console.print(f"  [{G1}][2][/] Manual — specify URL + parameter")
     console.print(f"  [{G1}][3][/] DOM XSS only — static JS sink analysis")
     console.print()
-    mode = ask_choice("Mode", "1")
+    mode = ask_choice("Mode") or "1"
 
     all_vulns = []
     dom_findings = []

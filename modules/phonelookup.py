@@ -308,7 +308,7 @@ def run():
     console.print(f"\n  [{CY}]── OSINT Links ──[/]  [{DM}](open manually)[/]")
     links = _osint_links(e164, raw)
     rows = [[name, url] for name, url in links]
-    print_result_table(["Service", "URL"], rows)
+    print_result_table("OSINT Links", ["Service", "URL"], rows)
 
     # Abuse / spam check hint
     console.print(f"\n  [{CY}]── Spam / Abuse Check ──[/]")

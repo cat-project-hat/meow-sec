@@ -90,14 +90,37 @@ _US_MOBILE_PREFIXES = ["201","202","203","204","205","206","207","208","209","21
 # ─── NORMALIZE ────────────────────────────────────────────────
 
 def _normalize(raw: str) -> str:
-    """Remove spaces, dashes, parentheses — keep digits and leading +."""
+    """Remove spaces, dashes, parentheses — keep digits and leading +.
+    Handles national formats: 06/07 (FR), 07 (UK), 0-prefix (DE/IT/ES/NL/BE...)
+    """
     cleaned = re.sub(r"[\s\-\(\)\.]+", "", raw.strip())
-    if not cleaned.startswith("+"):
-        if cleaned.startswith("00"):
-            cleaned = "+" + cleaned[2:]
-        elif not cleaned.startswith("+"):
-            cleaned = "+" + cleaned
-    return cleaned
+
+    if cleaned.startswith("+"):
+        return cleaned
+
+    if cleaned.startswith("00"):
+        return "+" + cleaned[2:]
+
+    # National format starting with 0 — try to infer country
+    if cleaned.startswith("0"):
+        digits = cleaned[1:]  # strip leading 0
+        # France: 06/07 mobile (10 digits total), 01-05 landline
+        if re.match(r"[1-9]\d{8}$", digits):  # 9 digits after 0 = 10 digit FR/EU number
+            prefix2 = cleaned[:2]  # e.g. "06", "07"
+            # France mobile: 06/07, landline: 01-05, special: 08/09
+            if prefix2 in ("06", "07", "01", "02", "03", "04", "05", "08", "09"):
+                return "+33" + digits
+            # UK mobile: 07xxx (11 digits total)
+            if prefix2 == "07" and len(cleaned) == 11:
+                return "+44" + digits
+            # Germany: 0xxx (variable length)
+            if len(cleaned) in (10, 11, 12):
+                return "+49" + digits
+        # Fallback: just prepend + and let parse figure it out
+        return "+" + cleaned
+
+    # No prefix at all — assume already without country code, prepend +
+    return "+" + cleaned
 
 def _parse_number(e164: str) -> dict:
     """Parse E.164 number against country code table."""

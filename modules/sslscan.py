@@ -173,7 +173,7 @@ def crt_sh_lookup(domain: str) -> list:
     """Recherche dans les logs CT via crt.sh — sans clé API"""
     if not HAS_REQUESTS: return []
     try:
-        r = requests.get(f"https://crt.sh/?q=%.{domain}&output=json", timeout=10,
+        r = requests.get(f"https://crt.sh/?q=%.{domain}&output=json",
                          timeout=15, headers={"User-Agent": "Mozilla/5.0"})
         if r.status_code != 200: return []
         entries = r.json()
